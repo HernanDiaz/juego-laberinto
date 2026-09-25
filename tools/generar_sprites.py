@@ -380,15 +380,12 @@ def contorno(img):
 T = 32
 P0, P1 = 10, 22  # el camino ocupa x/y en [P0, P1)
 
-CESPED = [(58, 132, 62), (74, 152, 70), (96, 176, 80), (124, 196, 92)]
-CESPED_BORDE = (44, 100, 52)
-ARBOL = [(28, 84, 48), (40, 112, 58), (70, 150, 74), (120, 190, 96)]
-FLORES = [(240, 90, 90), (250, 210, 80), (250, 250, 240), (200, 120, 230)]
-LOSA = (206, 196, 176)
-LOSA_JUNTA = (170, 158, 138)
-LOSA_CLARA = (224, 216, 198)
-BORDILLO = (150, 150, 150)
-SOMBRA = (160, 150, 130)
+SETO = [(30, 72, 46), (46, 104, 56), (64, 132, 64), (104, 168, 80)]
+SETO_BORDE = (22, 50, 36)
+ARENA = (214, 178, 116)
+ARENA_OSC = (176, 136, 86)
+ARENA_CLARA = (234, 206, 146)
+PIEDRA = (150, 116, 78)
 
 
 def es_camino(mask, x, y):
@@ -405,70 +402,60 @@ def es_camino(mask, x, y):
     return False
 
 
-def arbol(img, cx, cy, rnd):
-    """Copa redonda de radio 4 con brillo arriba a la izquierda y sombra abajo."""
-    for y in range(cy - 5, cy + 6):
-        for x in range(cx - 5, cx + 6):
-            d2 = (x - cx) ** 2 + (y - cy) ** 2
-            if not (0 <= x < T and 0 <= y < T):
-                continue
-            if d2 <= 16:
-                if (x - cx + 1.5) ** 2 + (y - cy + 1.5) ** 2 <= 3:
-                    c = ARBOL[3]
-                elif x - cx + y - cy < -1:
-                    c = ARBOL[2]
-                elif x - cx + y - cy > 3:
-                    c = ARBOL[0]
-                else:
-                    c = ARBOL[1] if rnd.random() > 0.15 else ARBOL[2]
-                img.putpixel((x, y), c + (255,))
-            elif d2 <= 25 and y > cy and x > cx - 3:
-                img.putpixel((x, y), CESPED_BORDE + (255,))  # sombra en el césped
-
-
 def loseta(mask, rnd):
     img = Image.new("RGBA", (T, T))
     camino = [[es_camino(mask, x, y) for x in range(T)] for y in range(T)]
     for y in range(T):
         for x in range(T):
             if camino[y][x]:
-                # losas de 4x4 al tresbolillo
-                off = 2 if (y // 4) % 2 else 0
-                if y % 4 == 0 or (x + off) % 4 == 0:
-                    c = LOSA_JUNTA
-                elif rnd.random() < 0.08:
-                    c = LOSA_CLARA
-                else:
-                    c = LOSA
-                # bordillo junto al césped y sombra (luz desde arriba-izquierda)
-                vecino_cesped = any(0 <= x + dx < T and 0 <= y + dy < T and not camino[y + dy][x + dx]
-                                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-                if vecino_cesped:
-                    c = BORDILLO
-                elif (y > 1 and not camino[y - 2][x]) or (x > 1 and not camino[y][x - 2]):
-                    c = SOMBRA
-            else:
+                c = ARENA
                 r = rnd.random()
-                if r < 0.15:
-                    c = CESPED[0]
+                if r < 0.06:
+                    c = ARENA_OSC
+                elif r < 0.12:
+                    c = ARENA_CLARA
+                elif r < 0.14:
+                    c = PIEDRA
+                # sombra del seto sobre el camino (luz desde arriba-izquierda)
+                if y > 0 and not camino[y - 1][x]:
+                    c = ARENA_OSC
+                elif y > 1 and not camino[y - 2][x]:
+                    c = tuple((a + b) // 2 for a, b in zip(ARENA, ARENA_OSC))
+                if x > 0 and not camino[y][x - 1]:
+                    c = ARENA_OSC
+            else:
+                # textura de hojas
+                r = rnd.random()
+                if r < 0.18:
+                    c = SETO[0]
                 elif r < 0.30:
-                    c = CESPED[2]
-                elif r < 0.33:
-                    c = CESPED[3]
+                    c = SETO[2]
+                elif r < 0.34:
+                    c = SETO[3]
                 else:
-                    c = CESPED[1]
-                if r > 0.985:
-                    c = FLORES[rnd.randrange(len(FLORES))]
+                    c = SETO[1]
+                # borde del seto junto al camino
+                vecino_camino = False
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < T and 0 <= ny < T and camino[ny][nx]:
+                        vecino_camino = True
+                if vecino_camino:
+                    c = SETO_BORDE
+                elif y + 1 < T and camino[y + 1][x]:
+                    c = SETO_BORDE
+                # brillo en la parte alta del seto
+                elif y > 0 and (y - 1 < 0 or camino[y - 1][x]) and rnd.random() < 0.7:
+                    c = SETO[3]
             img.putpixel((x, y), c + (255,))
-    # árboles en algunas esquinas (las esquinas nunca son camino)
-    for cx, cy in ((5, 5), (26, 5), (5, 26), (26, 26)):
-        if rnd.random() < 0.45:
-            arbol(img, cx, cy, rnd)
     # borde de la loseta para que se vea la rejilla
     for i in range(T):
+        for (x, y) in ((i, 0), (0, i)):
+            p = img.getpixel((x, y))
+            img.putpixel((x, y), tuple(min(255, v + 18) for v in p[:3]) + (255,))
         for (x, y) in ((i, T - 1), (T - 1, i)):
             p = img.getpixel((x, y))
-            img.putpixel((x, y), tuple(max(0, v - 30) for v in p[:3]) + (255,))
+            img.putpixel((x, y), tuple(max(0, v - 40) for v in p[:3]) + (255,))
     return img
 
 

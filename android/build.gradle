@@ -49,6 +49,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Id distinto para poder tener instaladas a la vez la versión de pruebas y la de Google Play
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-prueba'
+        }
         release {
             minifyEnabled false
             if (keystoreFile.exists()) signingConfig signingConfigs.release

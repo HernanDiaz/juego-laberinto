@@ -9,3 +9,5 @@ android/libs/
 keystore.properties
 *.jks
 *.keystore
+# APK de pruebas copiado a la raíz
+*.apk

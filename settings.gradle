@@ -1,0 +1,9 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = 'Laberinto'
+include 'core', 'lwjgl3', 'android'

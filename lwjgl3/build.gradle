@@ -1,0 +1,26 @@
+apply plugin: 'application'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+kotlin {
+    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }
+}
+
+sourceSets.main.resources.srcDirs += [rootProject.file('assets').path]
+
+application {
+    mainClass = 'com.hernan.laberinto.lwjgl3.Lwjgl3LauncherKt'
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+}
+
+tasks.named('run') {
+    workingDir = rootProject.file('assets')
+}

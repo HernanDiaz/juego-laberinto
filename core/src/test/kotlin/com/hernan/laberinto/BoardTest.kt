@@ -4,6 +4,7 @@ import com.hernan.laberinto.model.Ai
 import com.hernan.laberinto.model.Board
 import com.hernan.laberinto.model.Dirs
 import com.hernan.laberinto.model.GameState
+import com.hernan.laberinto.model.Goals
 import com.hernan.laberinto.model.Insert
 import com.hernan.laberinto.model.Pos
 import com.hernan.laberinto.model.Side
@@ -50,9 +51,41 @@ class BoardTest {
     }
 
     @Test
+    fun lasMetasSeRepartenPorEtapas() {
+        val s = GameState(1, 4, Random(4))
+        val all = s.players.flatMap { p -> p.stages.flatten() }
+        assertEquals(all.size, all.toSet().size, "Ninguna meta se repite entre jugadores")
+        for (p in s.players) {
+            p.stages.forEachIndexed { stage, goals ->
+                assertEquals(4, goals.size)
+                assertTrue(goals.all { Goals.stageOf(it) == stage })
+            }
+            // Al principio solo cuentan las metas de juventud
+            assertEquals(p.stages[0], p.activeGoals)
+        }
+    }
+
+    @Test
+    fun soloSeConsigueUnaMetaDeLaEtapaActual() {
+        val s = GameState(1, 1, Random(5))
+        val p = s.currentPlayer
+        val adultGoal = p.stages[1].first()
+        // Colocamos la meta de adultez justo donde está el jugador: no debe contar aún
+        s.board[p.pos].treasure = adultGoal
+        assertEquals(-1, s.moveCurrent(p.pos))
+        assertEquals(0, p.collected)
+        // La de juventud sí
+        val youthGoal = p.stages[0].first()
+        s.board[p.pos].treasure = youthGoal
+        assertEquals(youthGoal, s.moveCurrent(p.pos))
+        assertEquals(1, p.stage)
+        assertEquals(-1, s.board[p.pos].treasure, "La meta conseguida desaparece del tablero")
+    }
+
+    @Test
     fun partidaEntreIAsTermina() {
         repeat(5) { seed ->
-            val s = GameState(3, 6, Random(seed))
+            val s = GameState(3, 2, Random(seed))
             var turns = 0
             while (s.winner == null && turns < 3000) {
                 val plan = Ai.plan(s)

@@ -90,6 +90,10 @@ class Strings {
 
     fun treasure(i: Int) = get("treasure.$i")
     fun player(i: Int) = get("player.$i")
+    fun stage(i: Int) = get("stage.$i")
+
+    /** Título del juego; puede tener varias líneas. */
+    val titleLines get() = get("app.title").split('\n')
     val languageName get() = shape(LANGUAGE_NAMES.getValue(language))
 
     companion object {

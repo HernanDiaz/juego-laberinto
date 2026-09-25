@@ -18,7 +18,7 @@ object Dirs {
     fun rotateCw(mask: Int) = ((mask shl 1) or (mask shr 3)) and 15
 }
 
-class Tile(var mask: Int, val treasure: Int = -1, val fixed: Boolean = false) {
+class Tile(var mask: Int, var treasure: Int = -1, val fixed: Boolean = false) {
     fun rotateCw() {
         mask = Dirs.rotateCw(mask)
     }

@@ -1,6 +1,8 @@
-# Laberinto (pixel art)
+# Las vueltas de la vida (pixel art)
 
-Juego para Android inspirado en el juego de mesa *Labyrinth*, hecho con libGDX + Kotlin.
+Juego de laberinto para Android hecho con libGDX + Kotlin. El laberinto es el camino de la vida:
+cada jugador persigue metas secretas en tres etapas (juventud, adultez y madurez), en el orden
+que quiera dentro de cada etapa, y gana el primero que vuelve a casa para jubilarse.
 
 ## Módulos
 - `core/` – lógica (tablero, reglas, IA) y pantallas.

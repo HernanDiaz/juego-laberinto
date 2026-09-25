@@ -87,6 +87,9 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
     private var capCenter = 7.5f
     private var breakAnywhere = false
 
+    /** Altura de línea de la fuente actual (a escala 1). */
+    val lineHeight get() = font.lineHeight
+
     /** Cambia la fuente usada para todos los textos (depende del idioma). */
     fun useFont(info: Assets.FontInfo) {
         font = info.font
@@ -177,6 +180,27 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
         text(s, cx, cy + capCenter * scale, color, scale, Align.center)
     }
 
+    /**
+     * Panel de 70x70 con las metas de la etapa actual (iconos a tamaño doble).
+     * Sin metas pendientes muestra la casilla de casa (toca jubilarse).
+     */
+    fun goalPanel(x: Float, y: Float, goals: List<Int>, border: Color = GOLD) {
+        panel(x, y, GOAL_PANEL, GOAL_PANEL, SHADOW, border)
+        val slots = when (goals.size) {
+            0, 1 -> listOf(19f to 19f)
+            2 -> listOf(3f to 19f, 35f to 19f)
+            else -> listOf(3f to 35f, 35f to 35f, 3f to 3f, 35f to 3f)
+        }
+        if (goals.isEmpty()) {
+            batch.draw(a.homes[0], x + 3, y + 3, 64f, 64f)
+            return
+        }
+        goals.take(slots.size).forEachIndexed { i, g ->
+            val (dx, dy) = slots[i]
+            batch.draw(a.treasures[g], x + dx, y + dy, 32f, 32f)
+        }
+    }
+
     /** Botón pixel art con relieve; el texto baja con el botón al pulsarlo. */
     fun button(r: Rectangle, label: String, pressed: Boolean, style: Array<NinePatch> = a.slateButton, scale: Float = 1f) {
         style[if (pressed) 1 else 0].draw(batch, r.x, r.y, r.width, r.height)
@@ -192,6 +216,7 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
         val SHADOW = Color.valueOf("0a0c12")
         val GOLD = Color.valueOf("facc40")
         val MUTED = Color.valueOf("9aa2c0")
+        const val GOAL_PANEL = 70f
         private const val NO_LINE_START = "。、，．・：；！？）」』】〉》”’ーぁぃぅぇぉっゃゅょァィゥェォッャュョ…,.!?:;)"
 
     }

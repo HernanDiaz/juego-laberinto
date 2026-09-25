@@ -14,7 +14,7 @@ import com.hernan.laberinto.Assets
 import com.hernan.laberinto.Buttons
 import com.hernan.laberinto.LaberintoGame
 import com.hernan.laberinto.Ui
-import com.hernan.laberinto.model.Board
+import com.hernan.laberinto.model.GameState
 import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
@@ -27,8 +27,8 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
     private val viewport = ExtendViewport(WORLD_W, WORLD_H)
 
     private var numAi = 1
-    private var cards = 6
-    private val maxCards get() = Board.TREASURES / (numAi + 1)
+    private var cards = 2
+    private val maxCards get() = GameState.maxGoalsPerStage(numAi)
 
     private val bgRandom = Random(42)
     private val bgTiles = IntArray(200) { bgRandom.nextInt(16) }
@@ -136,11 +136,20 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
         ui.rect(0f, 0f, w, h, Color(0.05f, 0.06f, 0.09f, 0.72f))
 
         // Título
-        val titleY = h * 0.82f
-        ui.textCentered("LABERINTO", w / 2, titleY - 6, Ui.GOLD, 3f)
+        val titleY = h * 0.845f
+        // Las fuentes altas (hindi) van a tamaño doble para que el título no pise los iconos
+        val lines = s.titleLines
+        val titleScale = if (ui.lineHeight > 15) 2f else 3f
+        val spacing = minOf(ui.lineHeight, 15f) * titleScale * 0.8f
+        lines.forEachIndexed { i, line ->
+            ui.textCentered(line, w / 2, titleY + (lines.size - 1) * spacing / 2 - i * spacing, Ui.GOLD, titleScale)
+        }
+        // Iconos bajo la última línea del título
+        val lastLine = titleY - (lines.size - 1) * spacing / 2
+        val iconsY = minOf(titleY - 50, lastLine - 10 * titleScale - 18)
         val bob = (sin(time * 3f) * 2f)
         for (k in 0 until 5) {
-            batch.draw(a.treasures[(k * 5 + (time / 2).toInt()) % a.treasures.size], w / 2 - 56 + k * 24f, titleY - 36 + if (k % 2 == 0) bob else -bob)
+            batch.draw(a.treasures[(k * 5 + (time / 2).toInt()) % a.treasures.size], w / 2 - 56 + k * 24f, iconsY + if (k % 2 == 0) bob else -bob)
         }
 
         // Opciones

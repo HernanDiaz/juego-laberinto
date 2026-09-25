@@ -40,311 +40,299 @@ PALETA = {
 }
 
 # --------------------------------------------------------------------------
-# Tesoros (16x16). El script añade el contorno negro y centra el dibujo.
-# El orden debe coincidir con Treasures.NAMES en el código Kotlin.
+# Metas de vida (16x16). El script añade el contorno negro y centra el dibujo.
+# El orden importa: 0-7 juventud, 8-15 adultez, 16-23 madurez (ver Goals en Kotlin
+# y treasure.N en los textos).
 # --------------------------------------------------------------------------
 TESOROS = [
-    ("moneda", """
-...YYYYYY...
-..YWYYYYYYy.
-.YWYYyyyYYYy
-.YYYyYYYyYYy
-.YYYyYYYYYYy
-.YYYYyyyYYYy
-.YYYYYYYyYYy
-.YYYyYYYyYYy
-.YYYYyyyYYYy
-..YYYYYYYYy.
-...yyyyyy...
+    # ---- Juventud ----
+    ("diploma", """
+.tTTTTTTTTTTt.
+tTTTTTTTTTTTTt
+tTTkkkkkkkkTTt
+tTTTTTRRTTTTTt
+tTTkkkRRkkkTTt
+.tTTTTTTTTTTt.
+......R.R.....
+.....R...R....
 """),
-    ("llave", """
-.YYY..........
-YyyyY.........
-Yy.yYYYYYYYYYY
-Yy.yYyyyyyyyyy
-YyyyY.....Yy.Y
-.YYY......Yy.Y
+    ("guitarra", """
+.......nn.
+.......nn.
+.......Nn.
+.......Nn.
+.......Nn.
+......OOOy.
+.....OOOOOy
+.....OOkOOy
+......OOOy.
+.....OOOOOy
+....OOOkOOOy
+....OOOnOOOy
+.....OOOOOy.
+......yyyy..
 """),
-    ("corona", """
-Y.....Y.....Y
-YY...YYY...YY
-YYY.YYWYY.YYY
-YYYYYYYYYYYYY
-YyRyyyByyyGyY
-YYYYYYYYYYYYY
-yyyyyyyyyyyyy
+    ("moto", """
+..........kk...
+.........kRk...
+....RRRRRRk....
+...RRWRRRRRR...
+..kkkRRRRR.kkk.
+.k.g.k.....k.g.k
+.k.g.k.....k.g.k
+..kkk.......kkk.
 """),
-    ("gema", """
-..CCCCCCC..
-.CWCCCCCbC.
-CWCCCCCCCbb
-bCCCCCCCbbb
-.bCCCCCCbb.
-..bCCCCbb..
-...bCCbb...
-....bbb....
-.....b.....
+    ("videoconsola", """
+..wwwwwwwwwww..
+.wWWWWWWWWWWWw.
+wWkWWWWWWWWRWWw
+wkkkWWWWWWBWRWw
+wWkWWWkkWWWBWWw
+.wwww.....wwww.
+..ww.......ww..
 """),
-    ("anillo", """
-....BBB....
-...BWBbB...
-....BBB....
-...YYYYY...
-..YW...yY..
-.YW.....yY.
-.Y.......y.
-.Y.......y.
-.Yy.....yy.
-..yy...yy..
-...yyyyy...
+    ("mochila", """
+....nnnn....
+...n....n...
+..OOOOOOOO..
+.OOOOOOOOOO.
+.OOnnnnnnOO.
+.OONNNNNNOO.
+.OONNkNNNOO.
+.OONNNNNNOO.
+.OOOOOOOOOO.
+..OOOOOOOO..
 """),
-    ("pocion", """
-....NNN....
-....nnn....
-....wWw....
-....wWw....
-...wWWww...
-..wRRRRRw..
-.wRSRRRRrw.
-.wRSRRRRrw.
-.wRRRRRRrw.
-.wRRRRRrrw.
-..wrrrrrw..
-...wwwww...
+    ("carnet", """
+BBBBBBBBBBBBBB
+BWWWWWWWWWWWWB
+BWnnnWWkkkkkWB
+BWSSSWWWWWWWWB
+BWSkSWWkkkkWWB
+BWbbbWWWWWWWWB
+BWbbbWWkkkkkWB
+BWWWWWWWWWWWWB
+BBBBBBBBBBBBBB
 """),
-    ("espada", """
-......W......
-.....WWw.....
-.....WWw.....
-.....WWw.....
-.....WWw.....
-.....WWw.....
-.....WWw.....
-.....WWw.....
-..YYYYYYYYY..
-..yyyyyyyyy..
-.....NNn.....
-.....NNn.....
-.....YYy.....
+    ("monopatin", """
+.RRRRRRRRRRRR.
+RRYRRRRRRRRYRR
+.rrrrrrrrrrrr.
+...k......k...
+..kgk....kgk..
+...k......k...
 """),
-    ("escudo", """
-BBBBBBBBBBB
-BWBBBYBBBBb
-BBBBBYBBBBb
-BBYYYYYYYBb
-BBBBBYBBBBb
-BBBBBYBBBBb
-.BBBBYBBBb.
-.BBBBBBBBb.
-..BBBBBBb..
-...BBBBb...
-....bbb....
+    ("sueldo", """
+GGGGGGGGGGGGGG
+GeGGGGeeGGGGeG
+GGGGGeGGeGGGGG
+GeGGGGeeGGGGeG
+GGGGGGGGGGGGGG
+eeeeeeeeeeeeee
+GGGGGGGGGGGGGG
+eeeeeeeeeeeeee
 """),
-    ("calavera", """
-...WWWWWW...
-..WWWWWWWWw.
-.WWWWWWWWWWw
-.WWkkWWkkWWw
-.WWkkWWkkWWw
-.WWWWWWWWWWw
-..WWWkkWWWw.
-...WWWWWWw..
-...WkWkWkw..
-....wwwww...
+    # ---- Adultez ----
+    ("trabajo", """
+.....nnnn.....
+.....n..n.....
+.NNNNNNNNNNNN.
+NNNNNNNNNNNNNN
+NNNNNNYYNNNNNN
+nnnnnnYYnnnnnn
+NNNNNNNNNNNNNN
+NNNNNNNNNNNNNN
+.nnnnnnnnnnnn.
+"""),
+    ("coche", """
+....BBBBBB.....
+...BCCBCCCB....
+..BCCCBCCCCB...
+BBBBBBBBBBBBBB.
+BWBBBBBBBBBBRB.
+bbbbbbbbbbbbbb.
+.kkk.....kkk...
+k.g.k...k.g.k..
+.kkk.....kkk...
+"""),
+    ("pareja", """
+.RR.RR........
+RWRRRRR.SS.SS.
+RRRRRRRSWSSSSS
+.RRRRRSSSSSSSS
+..RRRR.SSSSSS.
+...RR...SSSS..
+.........SS...
+"""),
+    ("boda", """
+.....C......
+....CWC.....
+..YYYCYYY...
+.Y...YY..Y..
+Y...Y..Y..Y.
+Y...Y..Y..Y.
+.Y...YY..Y..
+..YYY..YYY..
+"""),
+    ("casa", """
+......RR......
+.....RRRR.....
+....RRRRRR....
+...RRRRRRRR...
+..RRRRRRRRRR..
+.RRRRRRRRRRRR.
+..TTTTTTTTTT..
+..TCCTTTTCCT..
+..TCCTNNTCCT..
+..TTTTNNTTTT..
+..TTTTNNTTTT..
+"""),
+    ("bebe", """
+....CCCCC....
+...CCCCCCC...
+..CCSSSSSCC..
+..CSSSSSSSC..
+..SSkSSSkSS..
+..SSSSSSSSS..
+..SSSRRRSSS..
+...SSSWSSS...
+....WWWWW....
+...WWWWWWW...
+"""),
+    ("perro", """
+.nn..........
+nNNn.........
+nNkNNNN......
+.NNNNNNk.....
+..NNNNN......
+..NNNNNNNNN.n
+..NNNNNNNNNNn
+..NNNNNNNNNN.
+..NN..NN..NN.
+..nn..nn..nn.
+"""),
+    ("ascenso", """
+Y.YYYYYYYY.Y
+Y.YYWYYYYY.Y
+.YYYYYYYYYY.
+..YYYYYYYy..
+..YYYYYYYy..
+...YYYYYy...
+.....Yy.....
+.....Yy.....
+...NNNNNN...
+...NNNNNN...
+"""),
+    # ---- Madurez ----
+    ("viaje", """
+..W...........
+..WW..........
+..WWW.........
+..WWWWWWWWWWW.
+.WWBWBWBWBWWWW
+..wwwwwwwwwww.
+.....ww.......
+....ww........
+"""),
+    ("velero", """
+......W.......
+......WW......
+......WWW.....
+......WWWW....
+......WWWWW...
+......WWWWWW..
+......n.......
+NNNNNNNNNNNNNN
+.NNNNNNNNNNNN.
+..BBBBBBBBBB..
+BBBBBBBBBBBBBB
+"""),
+    ("huerto", """
+....G..G....
+...GGeGGe...
+....eGGe....
+.GG..e..GG..
+.eGG.e.GGe..
+...GGeGG....
+.....e......
+.OOOOOOOOOO.
+..OOOOOOOO..
+..OOOOOOOO..
+...OOOOOO...
+"""),
+    ("gato", """
+.g.....g....
+.gg...gg....
+.ggggggg....
+.gYgggYg....
+.ggggggg....
+..gSggg.....
+..ggggg...g.
+.ggggggg..g.
+.ggggggggg..
+.gg.g.gg....
+"""),
+    ("camara", """
+...kkk........
+.kkkkkkkkkkkk.
+kggggggggggkRk
+kgggwwwwggggkk
+kggwBBBBwgggkk
+kggwBCCBwgggkk
+kggwBBBBwgggkk
+kgggwwwwggggkk
+kggggggggggggk
+.kkkkkkkkkkkk.
+"""),
+    ("ahorros", """
+.....kk.......
+..SSSSSSSS....
+.SSSSSSSSSS...
+SSkSSSSSSSSSS.
+SSSSSSSSSSSSRR
+SSSSSSSSSSSSRR
+.SSSSSSSSSSS..
+..SS....SS....
 """),
     ("libro", """
-..rRRRRRRRRR.
-.rRRRRRRRRRRk
-.rRRYYYYYRRRk
-.rRRRRRRRRRRk
-.rRRYYYYRRRRk
-.rRRRRRRRRRRk
-.rRRRRRRRRRRk
-.rRRRRRRRRRRk
-.rWWWWWWWWWWk
-..rrrrrrrrrr.
+.BBBBBBBBBB..
+.BWWWWWWWWBk.
+.BWkkkkkWWBYk
+.BWWWWWWWWBYk
+.BWkkkkWWWBY.
+.BWWWWWWWWB..
+.BWkkkkkkWB..
+.BWWWWWWWWB..
+.BBBBBBBBBB..
 """),
-    ("cofre", """
-..NNNNNNNNNN..
-.NNNNNNNNNNNN.
-.NnnnnnnnnnnN.
-.YYYYYYYYYYYY.
-.NNNNNYYNNNNN.
-.NNNNNykNNNNN.
-.NnnnnnnnnnnN.
-.NNNNNNNNNNNN.
-.YnnnnnnnnnnY.
-"""),
-    ("vela", """
-.....Y.....
-....YOY....
-....YOY....
-.....O.....
-.....k.....
-....WWw....
-....WWw....
-....WWw....
-....WWw....
-....WWw....
-..yYYYYYy..
-.yYYYYYYYy.
-"""),
-    ("corazon", """
-.RRR...RRR.
-RWRRR.RRRRr
-RWRRRRRRRRr
-RRRRRRRRRRr
-.RRRRRRRRr.
-..RRRRRRr..
-...RRRRr...
-....RRr....
-.....r.....
-"""),
-    ("estrella", """
-......Y......
-.....YYY.....
-.....YWY.....
-YYYYYYWYYYYYy
-.YYYYYYYYYYy.
-..YYYYYYYYy..
-...YYYYYYy...
-...YYYyYYy...
-..YYYy.yYYy..
-..Yyy...yyy..
-"""),
-    ("seta", """
-....RRRRR....
-..RRWWRRRRR..
-.RRWWRRRWWRR.
-RRRRRRRRWWRRr
-RWWRRRRRRRRRr
-rrrrrrrrrrrrr
-....WWWWw....
-....WWWWw....
-....WWWWw....
-....wwwww....
-"""),
-    ("manzana", """
-......nG.....
-......nGG....
-..RRRRnRRR...
-.RWRRRRRRRr..
-.RWRRRRRRRr..
-.RRRRRRRRRr..
-.RRRRRRRRRr..
-..RRRRRRRr...
-...RRrRRr....
-"""),
-    ("fantasma", """
-...WWWWW...
-..WWWWWWW..
-.WWWWWWWWw.
-.WWkWWkWWw.
-.WWkWWkWWw.
-.WWWWWWWWw.
-.WWWkkWWWw.
-.WWWWWWWWw.
-.WWWWWWWWw.
-.WW.WWW.Ww.
-.W...W...w.
-"""),
-    ("murcielago", """
-.p.........p.
-.pp..p.p..pp.
-pPPp.ppp.pPPp
-pPPPpYpYpPPPp
-pPPPPpppPPPPp
-pPP.pPPPp.PPp
-pp...pPp...pp
-p.....p.....p
-"""),
-    ("arana", """
-.g.........g.
-..g..ggg..g..
-...ggwwwgg...
-ggggRgggRgggg
-...ggggggg...
-..gggwgwggg..
-.g.ggggggg.g.
-g..ggggggg..g
-..g..ggg..g..
-.g.........g.
-"""),
-    ("buho", """
-.N.......N.
-.NN.....NN.
-.NNNNNNNNN.
-NWWWNNNWWWN
-NWkWNNNWkWN
-NWWWNONWWWN
-NNNNNONNNNn
-NNTTTTTTTNn
-NTTnTTnTTNn
-NNTTTTTTTNn
-.NNTTTTTNn.
-..OO...OO..
-"""),
-    ("raton", """
-.ww.....ww....
-wSSw...wSSw...
-wSSwwwwwSSw...
-.wwwwwwwwww...
-.wwwkwwwkww...
-.wwwwwwwwwww..
-..wwwSSSwww...
-...wwwwwww....
-....wwwww..www
-...........w..
-"""),
-    ("pez", """
-....BBBB.......
-..BBBBBBBB...B.
-.BWkBBBBBBB.BB.
-BBBBBBBBBBBBBB.
-.BCBBBBBBBB.BB.
-..BCCCCCBB...B.
-....bbbb.......
-"""),
-    ("mapa", """
-.TTTTTTTTTT.
-TttTTTTTTTTt
-.TTgTgTTTTT.
-.TTTTTTTRTT.
-.TTgTTTTTTT.
-.TTTTTgTTRT.
-.TTTTTTTTTT.
-.TgTTTTTTgT.
-TttTTTTTTTTt
-.TTTTTTTTTT.
-"""),
-    ("reloj", """
-NNNNNNNNNNN
-.wWWWWWWWw.
-.wYYYYYYYw.
-..wYYYYYw..
-...wYYYw...
-....wYw....
-....wYw....
-...w.Y.w...
-..w..Y..w..
-.wYYYYYYYw.
-.wWWWWWWWw.
-NNNNNNNNNNN
+    ("pesca", """
+............Nn
+...........Nn.
+..........Nn.w
+.........Nn..w
+........Nn...w
+.......Nn....w
+......Nn.....w
+.....Nn......R
+....Nn.......W
+..kNn.........
+..kk..........
 """),
 ]
 
 PEON = """
-.....XXXX.....
-....XWXXXx....
-....XXXXXx....
-.....XXXx.....
-....XXXXXx....
+.....nnnn.....
+....nnnnnn....
+....SkSSkS....
+....SSSSSS....
+.....SSSS.....
+....XXXXXX....
 ...XXXXXXXx...
-....XXXXXx....
-....XXXXXx....
-...XXXXXXXx...
-..XXXXXXXXXx..
-..xxxxxxxxxx..
+...SXXXXXxS...
+...SXXXXXxS...
+....bbbbbb....
+....bb..bb....
+....kk..kk....
 """
 
 COLORES_JUGADOR = [
@@ -392,12 +380,15 @@ def contorno(img):
 T = 32
 P0, P1 = 10, 22  # el camino ocupa x/y en [P0, P1)
 
-SETO = [(30, 72, 46), (46, 104, 56), (64, 132, 64), (104, 168, 80)]
-SETO_BORDE = (22, 50, 36)
-ARENA = (214, 178, 116)
-ARENA_OSC = (176, 136, 86)
-ARENA_CLARA = (234, 206, 146)
-PIEDRA = (150, 116, 78)
+CESPED = [(58, 132, 62), (74, 152, 70), (96, 176, 80), (124, 196, 92)]
+CESPED_BORDE = (44, 100, 52)
+ARBOL = [(28, 84, 48), (40, 112, 58), (70, 150, 74), (120, 190, 96)]
+FLORES = [(240, 90, 90), (250, 210, 80), (250, 250, 240), (200, 120, 230)]
+LOSA = (206, 196, 176)
+LOSA_JUNTA = (170, 158, 138)
+LOSA_CLARA = (224, 216, 198)
+BORDILLO = (150, 150, 150)
+SOMBRA = (160, 150, 130)
 
 
 def es_camino(mask, x, y):
@@ -414,60 +405,70 @@ def es_camino(mask, x, y):
     return False
 
 
+def arbol(img, cx, cy, rnd):
+    """Copa redonda de radio 4 con brillo arriba a la izquierda y sombra abajo."""
+    for y in range(cy - 5, cy + 6):
+        for x in range(cx - 5, cx + 6):
+            d2 = (x - cx) ** 2 + (y - cy) ** 2
+            if not (0 <= x < T and 0 <= y < T):
+                continue
+            if d2 <= 16:
+                if (x - cx + 1.5) ** 2 + (y - cy + 1.5) ** 2 <= 3:
+                    c = ARBOL[3]
+                elif x - cx + y - cy < -1:
+                    c = ARBOL[2]
+                elif x - cx + y - cy > 3:
+                    c = ARBOL[0]
+                else:
+                    c = ARBOL[1] if rnd.random() > 0.15 else ARBOL[2]
+                img.putpixel((x, y), c + (255,))
+            elif d2 <= 25 and y > cy and x > cx - 3:
+                img.putpixel((x, y), CESPED_BORDE + (255,))  # sombra en el césped
+
+
 def loseta(mask, rnd):
     img = Image.new("RGBA", (T, T))
     camino = [[es_camino(mask, x, y) for x in range(T)] for y in range(T)]
     for y in range(T):
         for x in range(T):
             if camino[y][x]:
-                c = ARENA
-                r = rnd.random()
-                if r < 0.06:
-                    c = ARENA_OSC
-                elif r < 0.12:
-                    c = ARENA_CLARA
-                elif r < 0.14:
-                    c = PIEDRA
-                # sombra del seto sobre el camino (luz desde arriba-izquierda)
-                if y > 0 and not camino[y - 1][x]:
-                    c = ARENA_OSC
-                elif y > 1 and not camino[y - 2][x]:
-                    c = tuple((a + b) // 2 for a, b in zip(ARENA, ARENA_OSC))
-                if x > 0 and not camino[y][x - 1]:
-                    c = ARENA_OSC
-            else:
-                # textura de hojas
-                r = rnd.random()
-                if r < 0.18:
-                    c = SETO[0]
-                elif r < 0.30:
-                    c = SETO[2]
-                elif r < 0.34:
-                    c = SETO[3]
+                # losas de 4x4 al tresbolillo
+                off = 2 if (y // 4) % 2 else 0
+                if y % 4 == 0 or (x + off) % 4 == 0:
+                    c = LOSA_JUNTA
+                elif rnd.random() < 0.08:
+                    c = LOSA_CLARA
                 else:
-                    c = SETO[1]
-                # borde del seto junto al camino
-                vecino_camino = False
-                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                    nx, ny = x + dx, y + dy
-                    if 0 <= nx < T and 0 <= ny < T and camino[ny][nx]:
-                        vecino_camino = True
-                if vecino_camino:
-                    c = SETO_BORDE
-                elif y + 1 < T and camino[y + 1][x]:
-                    c = SETO_BORDE
-                # brillo en la parte alta del seto
-                elif y > 0 and (y - 1 < 0 or camino[y - 1][x]) and rnd.random() < 0.7:
-                    c = SETO[3]
+                    c = LOSA
+                # bordillo junto al césped y sombra (luz desde arriba-izquierda)
+                vecino_cesped = any(0 <= x + dx < T and 0 <= y + dy < T and not camino[y + dy][x + dx]
+                                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+                if vecino_cesped:
+                    c = BORDILLO
+                elif (y > 1 and not camino[y - 2][x]) or (x > 1 and not camino[y][x - 2]):
+                    c = SOMBRA
+            else:
+                r = rnd.random()
+                if r < 0.15:
+                    c = CESPED[0]
+                elif r < 0.30:
+                    c = CESPED[2]
+                elif r < 0.33:
+                    c = CESPED[3]
+                else:
+                    c = CESPED[1]
+                if r > 0.985:
+                    c = FLORES[rnd.randrange(len(FLORES))]
             img.putpixel((x, y), c + (255,))
+    # árboles en algunas esquinas (las esquinas nunca son camino)
+    for cx, cy in ((5, 5), (26, 5), (5, 26), (26, 26)):
+        if rnd.random() < 0.45:
+            arbol(img, cx, cy, rnd)
     # borde de la loseta para que se vea la rejilla
     for i in range(T):
-        for (x, y) in ((i, 0), (0, i)):
-            p = img.getpixel((x, y))
-            img.putpixel((x, y), tuple(min(255, v + 18) for v in p[:3]) + (255,))
         for (x, y) in ((i, T - 1), (T - 1, i)):
             p = img.getpixel((x, y))
-            img.putpixel((x, y), tuple(max(0, v - 40) for v in p[:3]) + (255,))
+            img.putpixel((x, y), tuple(max(0, v - 30) for v in p[:3]) + (255,))
     return img
 
 
@@ -493,6 +494,7 @@ def generar_peones():
         pal = dict(PALETA)
         pal["X"] = claro
         pal["x"] = oscuro
+        pal["b"] = (52, 62, 100, 255)
         hoja.paste(dibujo_ascii(PEON, pal), (i * 16, 0))
         # marca de casilla de salida: anillo de color dentro del camino
         casa = Image.new("RGBA", (32, 32), (0, 0, 0, 0))

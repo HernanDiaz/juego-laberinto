@@ -62,7 +62,7 @@ class I18nTest {
                 // En hindi se quitan primero los aksharas que tienen glyph propio
                 var rest = text
                 for (c in clusters) rest = rest.replace(c, "")
-                val missing = rest.codePoints().toArray().filter { it != ' '.code && it !in available }
+                val missing = rest.codePoints().toArray().filter { !Character.isWhitespace(it) && it !in available }
                     .map { String(Character.toChars(it)) }
                 assertTrue(missing.isEmpty(), "$lang ($fnt): faltan $missing en \"$text\". Ejecuta tools/generar_fuentes.py")
             }

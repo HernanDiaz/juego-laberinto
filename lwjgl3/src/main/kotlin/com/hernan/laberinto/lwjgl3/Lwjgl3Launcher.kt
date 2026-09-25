@@ -10,7 +10,7 @@ import com.hernan.laberinto.LaberintoGame
  */
 fun main(args: Array<String>) {
     val config = Lwjgl3ApplicationConfiguration().apply {
-        setTitle("Laberinto")
+        setTitle("Las vueltas de la vida")
         setWindowedMode(432, 768)
         useVsync(true)
         setForegroundFPS(60)

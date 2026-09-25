@@ -28,13 +28,13 @@ import com.hernan.laberinto.model.Tile
 import kotlin.math.floor
 import kotlin.math.sin
 
-class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : ScreenAdapter() {
+class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int) : ScreenAdapter() {
     private val a = game.assets
     private val ui = game.ui
     private val batch = game.batch
     private val viewport = ExtendViewport(MenuScreen.WORLD_W, MenuScreen.WORLD_H)
 
-    private val state = GameState(numAi, cardsEach)
+    private val state = GameState(numAi, goalsPerStage)
     private val board get() = state.board
     private val human = state.players[0]
     private val audio = game.audio
@@ -53,6 +53,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
     private var status = ""
     private var toast = ""
     private var toastTime = 0f
+    private val pendingToasts = ArrayDeque<String>()
 
     // Disposición (en unidades de mundo, recalculada en resize)
     private var boardX = 0f
@@ -177,6 +178,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
 
     private fun finishWalk() {
         val p = state.currentPlayer
+        val stageBefore = p.stage
         val found = state.moveCurrent(walkPath.last())
         if (found >= 0) {
             showToast(
@@ -184,6 +186,9 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
                 else str.format("game.found", str.player(p.index), str.treasure(found)),
             )
             audio.play(if (p === human) audio.treasure else audio.rival)
+            if (p === human && p.stage != stageBefore) {
+                showToast(if (p.retiring) str["game.goHome"] else str.format("game.newStage", str.stage(p.stage)))
+            }
         }
         val winner = state.winner
         if (winner != null) {
@@ -197,7 +202,12 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
         startTurn()
     }
 
+    /** Los avisos se muestran de uno en uno, en orden. */
     private fun showToast(msg: String) {
+        if (toastTime > 0) {
+            pendingToasts.addLast(msg)
+            return
+        }
         toast = msg
         toastTime = TOAST_TIME
     }
@@ -207,7 +217,13 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
     private fun update(delta: Float) {
         timer += delta
         time += delta
-        if (toastTime > 0) toastTime -= delta
+        if (toastTime > 0) {
+            toastTime -= delta
+            if (toastTime <= 0 && pendingToasts.isNotEmpty()) {
+                toast = pendingToasts.removeFirst()
+                toastTime = TOAST_TIME
+            }
+        }
         when (phase) {
             Phase.AI_THINK -> if (timer > 0.6f) {
                 aiPlan = Ai.plan(state)
@@ -376,12 +392,11 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
             for (p in reach) ui.rect(cellX(p.c) + 2, cellY(p.r) + 2, TILE - 4f, TILE - 4f, Color(1f, 1f, 0.85f, alpha))
         }
 
-        // Objetivo del jugador humano
-        val goal = state.goalOf(human)
-        if (goal != null && phase != Phase.SLIDE && phase != Phase.OVER) {
+        // Metas activas del jugador humano (o su casa si le toca jubilarse)
+        if (phase != Phase.SLIDE && phase != Phase.OVER) {
             val pulse = 0.55f + 0.45f * sin(time * 6f)
             batch.color = Color(Ui.GOLD.r, Ui.GOLD.g, Ui.GOLD.b, pulse)
-            batch.draw(a.cursor, cellX(goal.c), cellY(goal.r))
+            for (goal in state.goalsOf(human)) batch.draw(a.cursor, cellX(goal.c), cellY(goal.r))
             batch.color = Color.WHITE
         }
 
@@ -483,21 +498,16 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, cardsEach: Int) : 
         }
         if (phase == Phase.PLACE) ui.textCentered(str["game.tapRotate"], s.x + s.width / 2, s.y - 13, Ui.MUTED)
 
-        // Carta del objetivo del humano
-        val cx = floor(w / 2 + 20)
-        val cy = s.y
-        ui.textCentered(str["game.goal"], cx + 26, cy + 64 + 10, Ui.MUTED)
-        batch.draw(a.card, cx, cy, 52f, 64f)
-        val target = human.target
-        if (target != null) {
-            batch.draw(a.treasures[target], cx + 10, cy + 16, 32f, 32f)
-            ui.textCentered(str.treasure(target), cx + 26, cy - 13, Ui.GOLD)
-            if (board.spare.treasure == target && phase != Phase.SLIDE) {
-                ui.textCentered(str["game.onSpare"], w / 2, cy - 29, Color.WHITE)
-            }
-        } else {
-            batch.draw(a.homes[0], cx + 10, cy + 16, 32f, 32f)
-            ui.textCentered(str["game.goHome"], cx + 26, cy - 13, Ui.GOLD)
+        // Metas de la etapa actual del humano
+        val gx = floor(w / 2 + 16)
+        val gy = s.y - 3
+        val half = Ui.GOAL_PANEL / 2
+        ui.textCentered(str.stage(human.stage), gx + half, s.y + s.height + 10, Ui.GOLD)
+        ui.goalPanel(gx, gy, human.activeGoals, if (human.retiring) Ui.GOLD else Ui.BORDER)
+        if (human.retiring) {
+            ui.textCentered(str["game.goHome"], gx + half, s.y - 13, Ui.GOLD)
+        } else if (board.spare.treasure in human.activeGoals && phase != Phase.SLIDE) {
+            ui.textCentered(str["game.onSpare"], w / 2, s.y - 29, Color.WHITE)
         }
     }
 

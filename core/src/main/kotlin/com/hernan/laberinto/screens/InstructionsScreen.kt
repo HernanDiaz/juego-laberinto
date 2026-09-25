@@ -121,16 +121,15 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
     // ------------------------------------------------------------ ilustraciones
 
     private fun drawGoal(cx: Float, cy: Float) {
-        // Carta con el tesoro buscado -> la misma casilla en el laberinto
-        batch.draw(a.card, cx - 80, cy - 32, 52f, 64f)
-        batch.draw(a.treasures[2], cx - 70, cy - 16, 32f, 32f)
+        // Metas de la etapa -> una de ellas en el laberinto
+        ui.goalPanel(cx - 96, cy - 35, listOf(0, 1, 2, 3))
         batch.draw(a.arrow, cx - 16, cy - 8)
         val pulse = 0.55f + 0.45f * sin(time * 6f)
         for (i in 0 until 2) {
             val x = cx + 16 + i * TILE
             batch.draw(a.tiles[Dirs.E or Dirs.W], x, cy - 16)
         }
-        batch.draw(a.treasures[2], cx + 16 + TILE + 8, cy - 8)
+        batch.draw(a.treasures[1], cx + 16 + TILE + 8, cy - 8)
         batch.color = Color(Ui.GOLD.r, Ui.GOLD.g, Ui.GOLD.b, pulse)
         batch.draw(a.cursor, cx + 16 + TILE, cy - 16)
         batch.color = Color.WHITE
@@ -187,7 +186,8 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
         batch.draw(a.homes[0], x, y)
         val hop = kotlin.math.abs(sin(time * 4f)) * 6f
         batch.draw(a.pawns[0], x + 8, y + 10 + hop)
-        for (k in 0 until 5) batch.draw(a.treasures[(k * 5 + 1) % a.treasures.size], cx - 48 + k * 20f, cy + 22)
+        // Las metas de las tres etapas, ya conseguidas
+        for (k in 0 until 5) batch.draw(a.treasures[k * 5 + 1], cx - 48 + k * 20f, cy + 22)
     }
 
     companion object {

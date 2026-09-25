@@ -62,7 +62,7 @@ data class Insert(val side: Side, val index: Int) {
     }
 
     companion object {
-        val ALL: List<Insert> = Side.entries.flatMap { s -> listOf(1, 3, 5).map { Insert(s, it) } }
+        val ALL: List<Insert> = Side.entries.flatMap { s -> Board.PUSH_LINES.map { Insert(s, it) } }
     }
 }
 
@@ -149,8 +149,19 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
         private const val STRAIGHT = Dirs.N or Dirs.S
         private const val CORNER = Dirs.N or Dirs.E
         private const val TEE = Dirs.N or Dirs.E or Dirs.S
+        private const val CROSS = Dirs.N or Dirs.E or Dirs.S or Dirs.W
+        private const val DEAD_END = Dirs.N
 
-        /** Orientación de las 16 piezas fijas (filas y columnas pares), como en el juego de mesa. */
+        /**
+         * Filas y columnas que se pueden empujar: 1, 2, 4 y 5 (16 entradas en parejas).
+         * Las líneas 0, 3 y 6 no se mueven: sus cruces son las 9 piezas fijas.
+         */
+        val PUSH_LINES = listOf(1, 2, 4, 5)
+        private val FIXED_LINES = setOf(0, 3, 6)
+
+        fun isFixed(r: Int, c: Int) = r in FIXED_LINES && c in FIXED_LINES
+
+        /** Piezas fijas: esquinas (casas) hacia dentro, centros de los bordes en T y una plaza en cruz. */
         private fun fixedMask(r: Int, c: Int): Int {
             val n = Dirs.N; val e = Dirs.E; val s = Dirs.S; val w = Dirs.W
             val last = SIZE - 1
@@ -163,10 +174,7 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
                 r == last -> n or e or w
                 c == 0 -> n or e or s
                 c == last -> n or s or w
-                r == 2 && c == 2 -> e or s or w
-                r == 2 && c == 4 -> n or s or w
-                r == 4 && c == 4 -> n or e or w
-                else -> n or e or s
+                else -> CROSS // plaza central
             }
         }
 
@@ -189,24 +197,30 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
         }
 
         /**
-         * Tablero aleatorio con la composición original:
-         * 16 fijas (12 con tesoro) + 34 móviles: 12 rectas, 16 curvas (6 con tesoro), 6 en T (con tesoro).
+         * Tablero aleatorio: 9 fijas (4 metas en los centros de los bordes) + 41 móviles:
+         * 10 rectas, 14 curvas (6 con meta), 10 en T (8 con meta), 3 cruces (2 con meta)
+         * y 4 callejones sin salida (todos con meta).
          */
         fun generate(rng: Random): Board {
             val treasures = (0 until TREASURES).shuffled(rng).iterator()
             val movable = ArrayList<Tile>()
-            repeat(12) { movable.add(Tile(STRAIGHT)) }
-            repeat(10) { movable.add(Tile(CORNER)) }
+            repeat(10) { movable.add(Tile(STRAIGHT)) }
+            repeat(8) { movable.add(Tile(CORNER)) }
             repeat(6) { movable.add(Tile(CORNER, treasures.next())) }
-            repeat(6) { movable.add(Tile(TEE, treasures.next())) }
+            repeat(2) { movable.add(Tile(TEE)) }
+            repeat(8) { movable.add(Tile(TEE, treasures.next())) }
+            repeat(1) { movable.add(Tile(CROSS)) }
+            repeat(2) { movable.add(Tile(CROSS, treasures.next())) }
+            repeat(4) { movable.add(Tile(DEAD_END, treasures.next())) }
             movable.shuffle(rng)
             movable.forEach { t -> repeat(rng.nextInt(4)) { t.rotateCw() } }
             val it = movable.iterator()
 
             val grid = Array(SIZE) { r ->
                 Array(SIZE) { c ->
-                    if (r % 2 == 0 && c % 2 == 0) {
-                        Tile(fixedMask(r, c), if (isCorner(r, c)) -1 else treasures.next(), fixed = true)
+                    if (isFixed(r, c)) {
+                        val goal = if (isCorner(r, c) || (r == 3 && c == 3)) -1 else treasures.next()
+                        Tile(fixedMask(r, c), goal, fixed = true)
                     } else {
                         it.next()
                     }

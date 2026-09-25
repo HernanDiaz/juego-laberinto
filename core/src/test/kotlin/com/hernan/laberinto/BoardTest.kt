@@ -46,9 +46,20 @@ class BoardTest {
     @Test
     fun noSePuedeDeshacerElEmpuje() {
         val s = GameState(1, 3, Random(3))
-        s.push(Insert(Side.TOP, 3))
-        assertFalse(Insert(Side.BOTTOM, 3) in s.allowedInserts())
-        assertEquals(11, s.allowedInserts().size)
+        s.push(Insert(Side.TOP, 2))
+        assertFalse(Insert(Side.BOTTOM, 2) in s.allowedInserts())
+        assertEquals(Insert.ALL.size - 1, s.allowedInserts().size)
+    }
+
+    @Test
+    fun lasPiezasFijasNoSeMueven() {
+        val b = Board.generate(Random(8))
+        val fixed = b.allCells().filter { Board.isFixed(it.r, it.c) }
+        assertEquals(9, fixed.size)
+        val before = fixed.associateWith { b[it] }
+        for (ins in Insert.ALL) b.push(ins, mutableListOf())
+        for ((pos, tile) in before) assertTrue(b[pos] === tile, "La pieza fija de $pos se ha movido")
+        assertEquals(16, Insert.ALL.size)
     }
 
     @Test

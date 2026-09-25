@@ -11,6 +11,6 @@ class AndroidLauncher : AndroidApplication() {
         val config = AndroidApplicationConfiguration().apply {
             useImmersiveMode = true
         }
-        initialize(LaberintoGame(), config)
+        initialize(LaberintoGame { PlayStore(this) }, config)
     }
 }

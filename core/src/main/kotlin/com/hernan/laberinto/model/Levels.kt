@@ -16,6 +16,8 @@ data class Level(
     val roundsFor2: Int,
     /** Para 3 estrellas: además, terminar con al menos estas monedas. */
     val coinsFor3: Int,
+    /** Solo con el juego completo (compra única). */
+    val premium: Boolean = false,
 ) {
     /** Estrellas conseguidas al ganar en [rounds] rondas con [coins] monedas. */
     fun stars(rounds: Int, coins: Int) = when {
@@ -54,6 +56,6 @@ object Levels {
             eventWeights = events,
         )
         val stars = v.get("stars")
-        return Level(index, v.getInt("icon"), setup, stars.getInt("rounds"), stars.getInt("coins"))
+        return Level(index, v.getInt("icon"), setup, stars.getInt("rounds"), stars.getInt("coins"), v.getBoolean("premium", false))
     }
 }

@@ -1,0 +1,19 @@
+TÍTULO (máx. 30):
+As voltas da vida
+
+DESCRIPCIÓN CORTA (máx. 80):
+Mova o labirinto da vida e conquiste suas metas antes de se aposentar.
+
+DESCRIPCIÓN COMPLETA (máx. 4000):
+As voltas da vida é um jogo de labirinto em pixel art em que o caminho muda a cada turno, assim como a vida.
+
+Empurre a peça solta pela borda do tabuleiro para deslocar linhas e colunas, abra caminho até suas metas e bloqueie o dos seus rivais.
+
+• Três fases da vida: juventude, vida adulta e maturidade. Conquiste suas metas (o diploma, a moto, o casamento, a casa, a viagem dos sonhos...) e volte para casa para se aposentar antes de todos.
+• Dinheiro e surpresas: junte moedas, pague as metas que custam dinheiro e arrisque nas casas "?": heranças, loterias, multas... ou uma mudança inesperada!
+• Rivais com personalidade: o ambicioso, o aventureiro e o tranquilo jogam cada um do seu jeito.
+• 8 níveis com estrelas, do bairro à aposentadoria dourada, cada um com seu próprio tabuleiro e suas regras.
+• Jogo livre contra 1, 2 ou 3 rivais.
+• Pixel art, música chiptune e 11 idiomas.
+
+Jogue grátis os 3 primeiros níveis. Com uma única compra você desbloqueia o jogo completo: os níveis 4 a 8 e o jogo livre contra até 3 rivais. Sem anúncios e sem coleta de dados.

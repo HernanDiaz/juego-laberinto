@@ -1,7 +1,7 @@
 info face="pixel" size=11 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=0 aa=1 padding=0,0,0,0 spacing=1,1
 common lineHeight=12 base=9 scaleW=112 scaleH=144 pages=1 packed=0
 page id=0 file="font.png"
-chars count=190
+chars count=191
 char id=32 x=0 y=0 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0
 char id=33 x=7 y=0 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0
 char id=34 x=14 y=0 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0
@@ -192,3 +192,4 @@ char id=252 x=70 y=132 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 c
 char id=253 x=77 y=132 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0
 char id=254 x=84 y=132 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0
 char id=255 x=91 y=132 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0
+char id=8364 x=98 y=132 width=6 height=11 xoffset=0 yoffset=0 xadvance=6 page=0 chnl=0

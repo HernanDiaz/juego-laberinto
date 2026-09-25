@@ -1,0 +1,19 @@
+TÍTULO (máx. 30):
+Les détours de la vie
+
+DESCRIPCIÓN CORTA (máx. 80):
+Déplace le labyrinthe de la vie et atteins tes objectifs avant la retraite.
+
+DESCRIPCIÓN COMPLETA (máx. 4000):
+Les détours de la vie est un jeu de labyrinthe en pixel art où le chemin change à chaque tour, comme dans la vie.
+
+Glisse la tuile libre depuis le bord du plateau pour décaler rangées et colonnes, ouvre-toi un chemin vers tes objectifs et bloque celui de tes rivaux.
+
+• Trois étapes de la vie : jeunesse, âge adulte et maturité. Atteins tes objectifs (le diplôme, la moto, le mariage, la maison, le voyage de tes rêves...) et rentre chez toi pour prendre ta retraite avant tout le monde.
+• Argent et événements : ramasse des pièces, paie les objectifs qui coûtent de l'argent et tente ta chance sur les cases « ? » : héritages, loteries, amendes... ou un déménagement inattendu !
+• Des rivaux avec du caractère : l'ambitieux, l'aventurier et le tranquille jouent chacun à leur façon.
+• 8 niveaux avec étoiles, du quartier à la retraite dorée, chacun avec son plateau et ses règles.
+• Partie libre contre 1, 2 ou 3 rivaux.
+• Pixel art, musique chiptune et 11 langues.
+
+Les 3 premiers niveaux sont gratuits. Un achat unique débloque le jeu complet : les niveaux 4 à 8 et la partie libre jusqu'à 3 rivaux. Sans publicité et sans collecte de données.

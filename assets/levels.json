@@ -28,6 +28,7 @@
   {
     "comment": "4. La gran ciudad: dos rivales y más callejones sin salida",
     "icon": 8,
+    "premium": true,
     "rivals": ["CALM", "AMBITIOUS"],
     "goalsPerStage": 2,
     "board": { "pushLines": [1, 2, 4, 5], "straight": 9, "corner": 13, "tee": 9, "cross": 3, "deadEnd": 7 },
@@ -36,6 +37,7 @@
   {
     "comment": "5. La crisis: multas y facturas frecuentes, pocas alegrías",
     "icon": 21,
+    "premium": true,
     "rivals": ["CALM", "ADVENTUROUS"],
     "goalsPerStage": 2,
     "board": { "pushLines": [1, 2, 4, 5], "coins": 4, "events": 7 },
@@ -45,6 +47,7 @@
   {
     "comment": "6. La lotería: muchas casillas ? y premios, pero todo cuesta más",
     "icon": 7,
+    "premium": true,
     "rivals": ["ADVENTUROUS", "AMBITIOUS"],
     "goalsPerStage": 2,
     "costExtra": 1,
@@ -55,6 +58,7 @@
   {
     "comment": "7. La mudanza: solo las esquinas son fijas (20 entradas) y las mudanzas son frecuentes",
     "icon": 12,
+    "premium": true,
     "rivals": ["CALM", "ADVENTUROUS", "AMBITIOUS"],
     "goalsPerStage": 2,
     "board": { "pushLines": [1, 2, 3, 4, 5], "events": 5 },
@@ -64,6 +68,7 @@
   {
     "comment": "8. La jubilación dorada: tres rivales, muchos callejones y todo más caro",
     "icon": 17,
+    "premium": true,
     "rivals": ["AMBITIOUS", "ADVENTUROUS", "CALM"],
     "goalsPerStage": 2,
     "costExtra": 1,

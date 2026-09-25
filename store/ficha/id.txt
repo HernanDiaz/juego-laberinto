@@ -1,0 +1,19 @@
+TÍTULO (máx. 30):
+Liku-liku Kehidupan
+
+DESCRIPCIÓN CORTA (máx. 80):
+Geser labirin kehidupan dan raih targetmu sebelum pensiun.
+
+DESCRIPCIÓN COMPLETA (máx. 4000):
+Liku-liku Kehidupan adalah game labirin pixel art yang jalurnya berubah setiap giliran, seperti kehidupan.
+
+Dorong ubin lepas dari tepi papan untuk menggeser baris dan kolom, buka jalan menuju targetmu dan halangi jalan lawan.
+
+• Tiga tahap kehidupan: masa muda, dewasa, dan masa tua. Raih targetmu (ijazah, motor, pernikahan, rumah, perjalanan impian...) lalu pulang untuk pensiun sebelum yang lain.
+• Uang dan kejadian: kumpulkan koin, bayar target yang butuh uang, dan uji keberuntungan di kotak "?": warisan, lotre, denda... atau pindahan mendadak!
+• Lawan dengan kepribadian: si ambisius, si petualang, dan si santai bermain dengan caranya masing-masing.
+• 8 level berbintang, dari lingkungan rumah hingga pensiun emas, masing-masing dengan papan dan aturannya sendiri.
+• Main bebas melawan 1, 2, atau 3 lawan.
+• Pixel art, musik chiptune, dan 11 bahasa.
+
+Mainkan 3 level pertama secara gratis. Sekali beli membuka game lengkap: level 4 sampai 8 dan main bebas melawan hingga 3 lawan. Tanpa iklan dan tanpa pengumpulan data.

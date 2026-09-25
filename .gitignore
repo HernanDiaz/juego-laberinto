@@ -5,3 +5,7 @@ local.properties
 *.iml
 .kotlin/
 android/libs/
+# Firma de publicación: NUNCA subir a git
+keystore.properties
+*.jks
+*.keystore

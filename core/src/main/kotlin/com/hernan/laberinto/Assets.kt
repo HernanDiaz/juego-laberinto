@@ -102,6 +102,9 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
     private var capCenter = 7.5f
     private var breakAnywhere = false
 
+    /** ¿Tiene la fuente actual todos los caracteres de [text]? */
+    fun canRender(text: String) = text.all { it == ' ' || font.data.hasGlyph(it) }
+
     /** Altura de línea de la fuente actual (a escala 1). */
     val lineHeight get() = font.lineHeight
 

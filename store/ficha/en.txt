@@ -1,0 +1,19 @@
+TÍTULO (máx. 30):
+Twists of Life
+
+DESCRIPCIÓN CORTA (máx. 80):
+Shift the maze of life and reach your goals before you retire.
+
+DESCRIPCIÓN COMPLETA (máx. 4000):
+Twists of Life is a pixel-art maze game where the path changes every turn, just like life.
+
+Push the loose tile in from the edge of the board to shift rows and columns, open a way to your goals and block your rivals.
+
+• Three stages of life: youth, adulthood and golden years. Reach your goals (a diploma, a motorbike, a wedding, a house, the trip of your dreams...) and get back home to retire before anyone else.
+• Money and events: collect coins, pay for the goals that cost money and take your chances on the "?" squares: inheritances, lotteries, fines... or an unexpected move!
+• Rivals with personality: the ambitious one, the adventurer and the laid-back one each play their own way.
+• 8 levels with stars, from the neighbourhood to golden retirement, each with its own board and rules.
+• Free play against 1, 2 or 3 rivals.
+• Pixel art, chiptune music and 11 languages.
+
+Play the first 3 levels for free. A single purchase unlocks the full game: levels 4 to 8 and free play against up to 3 rivals. No ads and no data collection.

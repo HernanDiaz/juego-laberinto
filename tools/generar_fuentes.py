@@ -26,6 +26,8 @@ FUSION = {
 # Nombre de cada idioma en su propia lengua (debe coincidir con Strings.LANGUAGE_NAMES)
 NOMBRES = {"zh": "简体中文", "ja": "日本語", "ru": "Русский", "hi": "हिन्दी"}
 CIRILICO = "".join(chr(c) for c in range(0x410, 0x450)) + "Ёё"
+# Símbolos de moneda: Google Play manda el precio en la moneda de cada país
+MONEDAS = "€£¥₹₽₩₺₫₱₪₴₦₡₸฿₲₵₭₮₼₾"
 
 CELDA_ALTO = 16   # ascendente 13 + descendente 3 en Fusion Pixel 12 px
 CENTRO = 10.5     # centro visual de mayúsculas y hanzi (medido en pantalla)
@@ -51,6 +53,8 @@ def fuente_fusion(lang):
         chars.update(t)
     if lang == "ru":
         chars.update(CIRILICO)
+    # Solo los símbolos de moneda que existen en la fuente (los demás se muestran con el código ISO)
+    chars.update(ch for ch in MONEDAS if font.getmask(ch).getbbox() is not None)
     chars.discard("\n")
     chars = sorted(chars)
 
@@ -107,7 +111,7 @@ def buscar_java():
 
 def fuente_hindi():
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".txt", delete=False) as tmp:
-        tmp.write("\n".join(textos("hi")))
+        tmp.write("\n".join(textos("hi") + ["₹"]))
         ruta = tmp.name
     try:
         subprocess.run([buscar_java(), os.path.join(ROOT, "tools", "GenerarFuenteHindi.java"), ruta,

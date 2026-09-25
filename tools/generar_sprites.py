@@ -770,6 +770,22 @@ def generar_fuente():
         lineas.append(
             f"char id={ord(ch)} x={cx} y={cy} width={gw} height={gh} xoffset=0 yoffset=0 xadvance={gw} page=0 chnl=0"
         )
+    # Símbolo del euro (no está en Latin-1): dibujado a mano en una celda extra
+    EURO = ["..###.", ".#....", "####..", ".#....", "####..", ".#....", "..###."]
+    i = len(chars)
+    cx = (i % cols) * (gw + 1)
+    cy = (i // cols) * (gh + 1)
+    if cy + gh + 1 > img.height:
+        grande = Image.new("RGBA", (img.width, cy + gh + 1), (0, 0, 0, 0))
+        grande.paste(img, (0, 0))
+        img = grande
+    for y, fila in enumerate(EURO):
+        for x, ch in enumerate(fila):
+            if ch == "#":
+                img.putpixel((cx + x, cy + 2 + y), (255, 255, 255, 255))
+    lineas.append(f"char id={0x20AC} x={cx} y={cy} width={gw} height={gh} xoffset=0 yoffset=0 xadvance={gw} page=0 chnl=0")
+    chars = chars + ["\u20ac"]
+
     img.save(os.path.join(ASSETS, "font.png"))
     with open(os.path.join(ASSETS, "font.fnt"), "w", encoding="utf-8") as f:
         f.write('info face="pixel" size=11 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=0 aa=1 padding=0,0,0,0 spacing=1,1\n')
@@ -780,15 +796,87 @@ def generar_fuente():
 
 
 def generar_icono():
-    base = Image.new("RGBA", (32, 32))
-    tiles = Image.open(os.path.join(ASSETS, "tiles.png"))
-    base.paste(tiles.crop((15 * T, 0, 16 * T, T)), (0, 0))
-    tesoro = Image.open(os.path.join(ASSETS, "treasures.png")).crop((2 * 16, 0, 3 * 16, 16))
-    base.alpha_composite(tesoro, (8, 8))
+    """Icono de la app: una personita en un cruce del laberinto, con una estrella.
+
+    - Icono adaptativo (Android 8+): fondo (seto con el cruce de caminos) y primer plano
+      (personita y estrella) en un lienzo de 36x36 px, donde la zona segura es el centro de 22 px.
+    - Iconos clásicos (Android 6-7) y el de 512x512 para Google Play: todo junto en 32x32.
+    """
+    rnd = random.Random(7)
+    seto = loseta(0, rnd)  # loseta sin caminos: solo seto
+    persona = Image.open(os.path.join(ASSETS, "pawns.png")).crop((0, 0, 16, 16))
+    estrella = Image.open(os.path.join(ASSETS, "map.png")).crop((32, 0, 40, 8))
+
+    def fondo(n):
+        img = Image.new("RGBA", (n, n))
+        for y in range(0, n, T):
+            for x in range(0, n, T):
+                img.paste(seto, (x, y))
+        # cruce de caminos de 10 px de ancho con sombra, como en las losetas
+        c0 = n // 2 - 5
+        for y in range(n):
+            for x in range(n):
+                if c0 <= x < c0 + 10 or c0 <= y < c0 + 10:
+                    col = ARENA
+                    if (y == c0 and not (c0 <= x < c0 + 10)) or (x == c0 and not (c0 <= y < c0 + 10)):
+                        col = ARENA_OSC
+                    img.putpixel((x, y), col + (255,))
+        return img
+
+    def figura(n):
+        img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+        img.alpha_composite(persona, (n // 2 - 8, n // 2 - 7))
+        img.alpha_composite(estrella, (n // 2 + 4, n // 2 - 9))
+        return img
+
+    # Icono completo 32x32 (clásico y tienda)
+    completo = fondo(32)
+    completo.alpha_composite(figura(32))
     for nombre, px in (("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), ("xxxhdpi", 192)):
         d = os.path.join(ANDROID_RES, f"mipmap-{nombre}")
         os.makedirs(d, exist_ok=True)
-        base.resize((px, px), Image.NEAREST).save(os.path.join(d, "ic_launcher.png"))
+        grande = completo.resize((px, px), Image.NEAREST)
+        grande.save(os.path.join(d, "ic_launcher.png"))
+        # versión redonda para los lanzadores que la piden
+        mascara = Image.new("L", (px, px), 0)
+        for y in range(px):
+            for x in range(px):
+                if (x - px / 2 + 0.5) ** 2 + (y - px / 2 + 0.5) ** 2 <= (px / 2) ** 2:
+                    mascara.putpixel((x, y), 255)
+        redonda = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+        redonda.paste(grande, (0, 0), mascara)
+        redonda.save(os.path.join(d, "ic_launcher_round.png"))
+
+    tienda = os.path.join(ROOT, "store")
+    os.makedirs(tienda, exist_ok=True)
+    completo.resize((512, 512), Image.NEAREST).convert("RGB").save(os.path.join(tienda, "icono-512.png"))
+
+    # Icono adaptativo: capas de 108 dp (36 px de arte)
+    fg = figura(36)
+    bg = fondo(36)
+    mono = Image.new("RGBA", (36, 36), (0, 0, 0, 0))
+    for y in range(36):
+        for x in range(36):
+            if fg.getpixel((x, y))[3] > 0:
+                mono.putpixel((x, y), (255, 255, 255, 255))
+    for nombre, escala in (("mdpi", 3), ("hdpi", 4.5), ("xhdpi", 6), ("xxhdpi", 9), ("xxxhdpi", 12)):
+        d = os.path.join(ANDROID_RES, f"mipmap-{nombre}")
+        px = int(36 * escala)
+        fg.resize((px, px), Image.NEAREST).save(os.path.join(d, "ic_launcher_foreground.png"))
+        bg.resize((px, px), Image.NEAREST).save(os.path.join(d, "ic_launcher_background.png"))
+        mono.resize((px, px), Image.NEAREST).save(os.path.join(d, "ic_launcher_monochrome.png"))
+    d = os.path.join(ANDROID_RES, "mipmap-anydpi-v26")
+    os.makedirs(d, exist_ok=True)
+    xml = """<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
+</adaptive-icon>
+"""
+    for nombre in ("ic_launcher.xml", "ic_launcher_round.xml"):
+        with open(os.path.join(d, nombre), "w", encoding="utf-8") as f:
+            f.write(xml)
 
 
 if __name__ == "__main__":

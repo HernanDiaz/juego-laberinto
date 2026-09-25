@@ -21,7 +21,9 @@ import com.hernan.laberinto.model.Ai
 import com.hernan.laberinto.model.AiPlan
 import com.hernan.laberinto.model.Board
 import com.hernan.laberinto.model.GameState
+import com.hernan.laberinto.model.EventType
 import com.hernan.laberinto.model.Insert
+import com.hernan.laberinto.model.Item
 import com.hernan.laberinto.model.Pos
 import com.hernan.laberinto.model.Side
 import com.hernan.laberinto.model.Tile
@@ -61,6 +63,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
     private val spareRect = Rectangle()
     private val soundBtn = Rectangle()
     private var lastStep = 0
+    private val pickedThisWalk = HashSet<Tile>()
     private val touch = Vector2()
 
     // Pausa
@@ -137,7 +140,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         val p = state.currentPlayer
         if (p.isAi) {
             phase = Phase.AI_THINK
-            status = str.format("game.turn", str.player(p.index))
+            status = str.format("game.turnAi", str.player(p.index), str["ai.${p.personality!!.name}"])
         } else {
             phase = Phase.PLACE
             status = str["game.place"]
@@ -174,21 +177,35 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         phase = Phase.WALK
         timer = 0f
         lastStep = 0
+        pickedThisWalk.clear()
     }
 
     private fun finishWalk() {
         val p = state.currentPlayer
         val stageBefore = p.stage
-        val found = state.moveCurrent(walkPath.last())
-        if (found >= 0) {
+        val r = state.moveCurrent(walkPath)
+        pickedThisWalk.clear()
+        if (r.goal >= 0) {
             showToast(
-                if (p === human) str.format("game.youFound", str.treasure(found))
-                else str.format("game.found", str.player(p.index), str.treasure(found)),
+                if (p === human) str.format("game.youFound", str.treasure(r.goal))
+                else str.format("game.found", str.player(p.index), str.treasure(r.goal)),
             )
             audio.play(if (p === human) audio.treasure else audio.rival)
+            if (r.reward > 0 && p === human) showToast(str.format("game.reward", r.reward))
             if (p === human && p.stage != stageBefore) {
                 showToast(if (p.retiring) str["game.goHome"] else str.format("game.newStage", str.stage(p.stage)))
             }
+        }
+        if (r.blockedGoal >= 0 && p === human) {
+            showToast(str.format("game.needCoins", r.missingCoins, str.treasure(r.blockedGoal)))
+            audio.play(audio.denied)
+        }
+        r.event?.let { e ->
+            audio.play(audio.event)
+            showToast(
+                if (e == EventType.SWAP) str.format("event.SWAP", str.player(p.index), str.player(r.swappedWith!!.index))
+                else str.format("event.${e.name}", str.player(p.index), kotlin.math.abs(r.eventCoins)),
+            )
         }
         val winner = state.winner
         if (winner != null) {
@@ -252,6 +269,9 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
                 if (step > lastStep) {
                     lastStep = step
                     audio.play(audio.step, 0.7f, MathUtils.random(0.9f, 1.15f))
+                    // Las monedas se recogen al pasar por encima
+                    val tile = board[walkPath[step]]
+                    if (tile.item == Item.COIN && pickedThisWalk.add(tile)) audio.play(audio.coin, 0.8f)
                 }
                 if (timer >= STEP_TIME * (walkPath.size - 1)) finishWalk()
             }
@@ -359,6 +379,10 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
     private fun drawTile(tile: Tile, x: Float, y: Float) {
         batch.draw(a.tiles[tile.mask], x, y)
         if (tile.treasure >= 0) batch.draw(a.treasures[tile.treasure], x + 8, y + 8)
+        when (tile.item) {
+            Item.COIN -> if (tile !in pickedThisWalk) batch.draw(a.smallCoin, x + 12, y + 12)
+            Item.EVENT -> batch.draw(a.event, x + 8, y + 8)
+        }
     }
 
     private fun drawBoard() {
@@ -480,7 +504,10 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
             val isCurrent = p === state.currentPlayer && phase != Phase.OVER
             ui.panel(x + 1, chipY, chipW - 2, 28f, Ui.PANEL, if (isCurrent) Assets.PLAYER_COLORS[p.index] else Ui.BORDER)
             batch.draw(a.pawns[p.index], x + 4, chipY + 6)
-            ui.textCentered("${p.collected}/${p.total}", x + 22 + (chipW - 24) / 2, chipY + 14, Ui.GOLD)
+            val tx = x + 22 + (chipW - 24) / 2
+            ui.textCentered("${p.collected}/${p.total}", tx, chipY + 20, Ui.GOLD)
+            batch.draw(a.smallCoin, tx - 10, chipY + 4)
+            ui.textCentered(p.coins.toString(), tx + 4, chipY + 8, Color.WHITE)
         }
         ui.textCentered(status, w / 2, chipY - 14, Color.WHITE)
     }
@@ -495,6 +522,10 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
             val spare = board.spare
             batch.draw(a.tiles[spare.mask], s.x, s.y, s.width, s.height)
             if (spare.treasure >= 0) batch.draw(a.treasures[spare.treasure], s.x + 16, s.y + 16, 32f, 32f)
+            when (spare.item) {
+                Item.COIN -> batch.draw(a.coin, s.x + 16, s.y + 16, 32f, 32f)
+                Item.EVENT -> batch.draw(a.event, s.x + 16, s.y + 16, 32f, 32f)
+            }
         }
         if (phase == Phase.PLACE) ui.textCentered(str["game.tapRotate"], s.x + s.width / 2, s.y - 13, Ui.MUTED)
 
@@ -503,7 +534,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         val gy = s.y - 3
         val half = Ui.GOAL_PANEL / 2
         ui.textCentered(str.stage(human.stage), gx + half, s.y + s.height + 10, Ui.GOLD)
-        ui.goalPanel(gx, gy, human.activeGoals, if (human.retiring) Ui.GOLD else Ui.BORDER)
+        ui.goalPanel(gx, gy, human.activeGoals, if (human.retiring) Ui.GOLD else Ui.BORDER, human.coins)
         if (human.retiring) {
             ui.textCentered(str["game.goHome"], gx + half, s.y - 13, Ui.GOLD)
         } else if (board.spare.treasure in human.activeGoals && phase != Phase.SLIDE) {

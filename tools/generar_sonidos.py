@@ -143,6 +143,16 @@ def efectos():
     # Movimiento no permitido
     guardar("denied.wav", tono(110, 0.08, vol=0.25, duty=0.3) + silencio(0.04) + tono(98, 0.12, vol=0.25, duty=0.3))
 
+    # Moneda: dos notas agudas muy rápidas
+    guardar("coin.wav", tono(988, 0.05, vol=0.2, duty=0.25, decay=0.05) + tono(1319, 0.12, vol=0.2, duty=0.25, decay=0.07))
+
+    # Suceso: arpegio misterioso con brillo
+    buf = silencio(0.7)
+    for k, n in enumerate(("E5", "G#5", "C6", "E6", "G#6")):
+        en(buf, int(k * 0.07 * SR), tono(midi(nota(n)), 0.25, triangle, vol=0.18, decay=0.12))
+    en(buf, int(0.35 * SR), ruido(0.3, vol=0.05, decay=0.1, hold=1))
+    guardar("event.wav", buf)
+
     # Victoria: fanfarria
     buf = silencio(1.6)
     t = 0.0

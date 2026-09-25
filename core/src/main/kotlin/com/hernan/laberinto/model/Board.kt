@@ -18,13 +18,20 @@ object Dirs {
     fun rotateCw(mask: Int) = ((mask shl 1) or (mask shr 3)) and 15
 }
 
-class Tile(var mask: Int, var treasure: Int = -1, val fixed: Boolean = false) {
+/** Objetos que puede haber en una casilla sin meta. */
+object Item {
+    const val NONE = 0
+    const val COIN = 1
+    const val EVENT = 2
+}
+
+class Tile(var mask: Int, var treasure: Int = -1, val fixed: Boolean = false, var item: Int = Item.NONE) {
     fun rotateCw() {
         mask = Dirs.rotateCw(mask)
     }
 
     fun opens(d: Int) = mask and d != 0
-    fun copy() = Tile(mask, treasure, fixed)
+    fun copy() = Tile(mask, treasure, fixed, item)
 }
 
 data class Pos(val r: Int, val c: Int) {
@@ -92,6 +99,9 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
         return q.inBoard() && this[p].opens(d) && this[q].opens(Dirs.opposite(d))
     }
 
+    /** Árbol de caminos más cortos desde [from]: casilla alcanzable -> casilla anterior. */
+    fun paths(from: Pos): Map<Pos, Pos?> = bfs(from)
+
     private fun bfs(from: Pos): Map<Pos, Pos?> {
         val prev = LinkedHashMap<Pos, Pos?>()
         prev[from] = null
@@ -114,18 +124,15 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
     fun reachable(from: Pos): Set<Pos> = bfs(from).keys
 
     /** Camino más corto de [from] a [to], ambos incluidos, o null si no están conectados. */
-    fun path(from: Pos, to: Pos): List<Pos>? {
-        val prev = bfs(from)
-        if (to !in prev) return null
-        val out = ArrayList<Pos>()
-        var cur: Pos? = to
-        while (cur != null) {
-            out.add(cur)
-            cur = prev[cur]
-        }
-        out.reverse()
-        return out
+    fun path(from: Pos, to: Pos): List<Pos>? = pathIn(bfs(from), to)
+
+    /** Casillas vacías (sin meta ni objeto) donde puede aparecer una moneda nueva. */
+    fun emptyCells(): List<Pos> = allCells().filter { p ->
+        val t = this[p]
+        t.treasure < 0 && t.item == Item.NONE && !isCorner(p.r, p.c)
     }
+
+    fun allCells(): List<Pos> = (0 until SIZE).flatMap { r -> (0 until SIZE).map { c -> Pos(r, c) } }
 
     /** Posición del tesoro en el tablero, o null si está en la pieza suelta. */
     fun find(treasure: Int): Pos? {
@@ -165,6 +172,22 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
 
         fun isCorner(r: Int, c: Int) = (r == 0 || r == SIZE - 1) && (c == 0 || c == SIZE - 1)
 
+        const val COINS = 6
+        const val EVENTS = 4
+
+        /** Camino hasta [to] dentro de un árbol de [paths], ambos extremos incluidos. */
+        fun pathIn(prev: Map<Pos, Pos?>, to: Pos): List<Pos>? {
+            if (to !in prev) return null
+            val out = ArrayList<Pos>()
+            var cur: Pos? = to
+            while (cur != null) {
+                out.add(cur)
+                cur = prev[cur]
+            }
+            out.reverse()
+            return out
+        }
+
         /**
          * Tablero aleatorio con la composición original:
          * 16 fijas (12 con tesoro) + 34 móviles: 12 rectas, 16 curvas (6 con tesoro), 6 en T (con tesoro).
@@ -189,7 +212,12 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
                     }
                 }
             }
-            return Board(grid, it.next())
+            val board = Board(grid, it.next())
+            // Sucesos y monedas en casillas sin meta
+            val free = board.emptyCells().shuffled(rng)
+            free.take(EVENTS).forEach { board[it].item = Item.EVENT }
+            free.drop(EVENTS).take(COINS).forEach { board[it].item = Item.COIN }
+            return board
         }
     }
 }

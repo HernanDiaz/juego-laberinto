@@ -624,6 +624,54 @@ def generar_iconos():
     hoja.save(os.path.join(ASSETS, "icons.png"))
 
 
+MONEDA = """
+...YYYYYY...
+..YWYYYYYYy.
+.YWYYyyyYYYy
+.YYYyYYYyYYy
+.YYYyYYYYYYy
+.YYYYyyyYYYy
+.YYYYYYYyYYy
+.YYYyYYYyYYy
+.YYYYyyyYYYy
+..YYYYYYYYy.
+...yyyyyy...
+"""
+
+MONEDA_PEQUENA = """
+.YYYY.
+YWYYYy
+YYyyYy
+YYyyYy
+YYYYYy
+.yyyy.
+"""
+
+SUCESO = """
+...PPPPPP...
+..PPPPPPPP..
+.PPPWWWWPPp.
+.PPWWppWWPp.
+.PPppPPWWPp.
+.PPPPPWWPPp.
+.PPPPWWPPPp.
+.PPPPWWPPPp.
+.PPPPPPPPPp.
+.PPPPWWPPPp.
+..pPPWWPPp..
+...pppppp...
+"""
+
+
+def generar_objetos():
+    # items.png: [0] moneda 16x16, [1] suceso "?" 16x16, [2] moneda pequeña 8x8 (en x=32)
+    hoja = Image.new("RGBA", (48, 16), (0, 0, 0, 0))
+    hoja.paste(dibujo_ascii(MONEDA, PALETA), (0, 0))
+    hoja.paste(dibujo_ascii(SUCESO, PALETA), (16, 0))
+    hoja.paste(dibujo_ascii(MONEDA_PEQUENA, PALETA, size=8), (32, 0))
+    hoja.save(os.path.join(ASSETS, "items.png"))
+
+
 def generar_fuente():
     """Fuente bitmap (AngelCode .fnt) a partir de la fuente por defecto de PIL."""
     font = ImageFont.load_default()
@@ -675,6 +723,7 @@ if __name__ == "__main__":
     generar_ui()
     generar_botones()
     generar_iconos()
+    generar_objetos()
     generar_fuente()
     generar_icono()
     print("Sprites generados en", ASSETS)

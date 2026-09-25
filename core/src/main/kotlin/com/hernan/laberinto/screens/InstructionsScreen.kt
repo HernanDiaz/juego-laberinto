@@ -92,7 +92,8 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
         ui.textCentered(s["howto.title"], w / 2, h - 28, Ui.GOLD, 2f)
 
         val n = page + 1
-        ui.textCentered(s["howto.p$n.title"], w / 2, h - 60, Color.WHITE)
+        val key = PAGE_TEXTS[page] // la página de dinero (p5) va antes que la de jubilación (p4)
+        ui.textCentered(s["howto.p$key.title"], w / 2, h - 60, Color.WHITE)
 
         // Ilustración centrada en un recuadro
         val boxH = 112f
@@ -104,10 +105,11 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
             0 -> drawGoal(cx, cy)
             1 -> drawPush(cx, cy)
             2 -> drawWalk(cx, cy)
+            3 -> drawMoney(cx, cy)
             else -> drawWin(cx, cy)
         }
 
-        ui.textWrapped(s["howto.p$n.text"], 16f, boxY - 12, w - 32, Color.WHITE, Align.center)
+        ui.textWrapped(s["howto.p$key.text"], 16f, boxY - 12, w - 32, Color.WHITE, Align.center)
 
         // Navegación
         prevBtn.rect.set(16f, 56f, 44f, 34f)
@@ -179,6 +181,17 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
         batch.draw(a.pawns[0], floor(px + 8), floor(py + 10))
     }
 
+    private fun drawMoney(cx: Float, cy: Float) {
+        // Una moneda en el camino, una casilla "?" y una meta con su precio
+        val y = cy - 16
+        batch.draw(a.tiles[Dirs.E or Dirs.W], cx - 90, y)
+        val bob = kotlin.math.abs(sin(time * 4f)) * 3f
+        batch.draw(a.coin, cx - 82, y + 8 + bob)
+        batch.draw(a.tiles[Dirs.E or Dirs.W], cx - 16, y)
+        batch.draw(a.event, cx - 8, y + 8)
+        ui.goalPanel(cx + 40, cy - 35, listOf(12), Ui.BORDER, coins = 1)
+    }
+
     private fun drawWin(cx: Float, cy: Float) {
         val x = cx - TILE / 2f
         val y = cy - 24
@@ -191,6 +204,7 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
     }
 
     companion object {
-        const val PAGES = 4
+        const val PAGES = 5
+        private val PAGE_TEXTS = intArrayOf(1, 2, 3, 5, 4)
     }
 }

@@ -20,6 +20,8 @@ class Audio : Disposable {
     val click = sfx("click")
     val denied = sfx("denied")
     val win = sfx("win")
+    val coin = sfx("coin")
+    val event = sfx("event")
     val lose = sfx("lose")
 
     private val music: Music = Gdx.audio.newMusic(Gdx.files.internal("sfx/music.wav")).apply {

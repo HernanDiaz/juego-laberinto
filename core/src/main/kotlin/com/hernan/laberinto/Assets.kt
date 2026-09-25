@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Disposable
 import com.hernan.laberinto.model.Board
+import com.hernan.laberinto.model.Goals
 import java.util.Properties
 import kotlin.math.roundToInt
 
@@ -49,6 +50,11 @@ class Assets : Disposable {
     val soundOn = TextureRegion(iconsTex, 0, 0, 16, 16)
     val soundOff = TextureRegion(iconsTex, 16, 0, 16, 16)
     val pause = TextureRegion(iconsTex, 32, 0, 16, 16)
+
+    private val itemsTex = tex("items.png")
+    val coin = TextureRegion(itemsTex, 0, 0, 16, 16)
+    val event = TextureRegion(itemsTex, 16, 0, 16, 16)
+    val smallCoin = TextureRegion(itemsTex, 32, 0, 8, 8)
 
     /** Fuente bitmap y el centro visual de sus mayúsculas (px desde el borde superior de la línea). */
     class FontInfo(val font: BitmapFont, val capCenter: Float, val breakAnywhere: Boolean)
@@ -184,7 +190,7 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
      * Panel de 70x70 con las metas de la etapa actual (iconos a tamaño doble).
      * Sin metas pendientes muestra la casilla de casa (toca jubilarse).
      */
-    fun goalPanel(x: Float, y: Float, goals: List<Int>, border: Color = GOLD) {
+    fun goalPanel(x: Float, y: Float, goals: List<Int>, border: Color = GOLD, coins: Int = Int.MAX_VALUE) {
         panel(x, y, GOAL_PANEL, GOAL_PANEL, SHADOW, border)
         val slots = when (goals.size) {
             0, 1 -> listOf(19f to 19f)
@@ -198,6 +204,12 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
         goals.take(slots.size).forEachIndexed { i, g ->
             val (dx, dy) = slots[i]
             batch.draw(a.treasures[g], x + dx, y + dy, 32f, 32f)
+            // Precio: moneda pequeña + número (en rojo si no te llega el dinero)
+            val cost = Goals.COST[g]
+            if (cost > 0) {
+                batch.draw(a.smallCoin, x + dx + 20, y + dy)
+                text(cost.toString(), x + dx + 30, y + dy + 12, if (cost > coins) Color.valueOf("ff6060") else Color.WHITE)
+            }
         }
     }
 

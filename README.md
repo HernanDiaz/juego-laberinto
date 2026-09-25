@@ -4,6 +4,11 @@ Juego de laberinto para Android hecho con libGDX + Kotlin. El laberinto es el ca
 cada jugador persigue metas secretas en tres etapas (juventud, adultez y madurez), en el orden
 que quiera dentro de cada etapa, y gana el primero que vuelve a casa para jubilarse.
 
+- **Dinero:** las monedas del camino se recogen al pasar. Algunas metas cuestan monedas y otras
+  dan dinero (primer sueldo, trabajo, ascenso). Precios y recompensas en `Goals.COST` / `Goals.REWARD`.
+- **Sucesos:** terminar en una casilla "?" provoca herencia, lotería, multa, factura, regalo o mudanza.
+- **Rivales:** cada IA tiene una personalidad (ambicioso, aventurero o tranquilo) que cambia sus prioridades.
+
 ## Módulos
 - `core/` – lógica (tablero, reglas, IA) y pantallas.
 - `android/` – lanzador de Android.

@@ -202,7 +202,14 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
      * Panel de 70x70 con las metas de la etapa actual (iconos a tamaño doble).
      * Sin metas pendientes muestra la casilla de casa (toca jubilarse).
      */
-    fun goalPanel(x: Float, y: Float, goals: List<Int>, border: Color = GOLD, coins: Int = Int.MAX_VALUE) {
+    fun goalPanel(
+        x: Float,
+        y: Float,
+        goals: List<Int>,
+        border: Color = GOLD,
+        coins: Int = Int.MAX_VALUE,
+        costOf: (Int) -> Int = { Goals.COST[it] },
+    ) {
         panel(x, y, GOAL_PANEL, GOAL_PANEL, SHADOW, border)
         val slots = when (goals.size) {
             0, 1 -> listOf(19f to 19f)
@@ -217,7 +224,7 @@ class Ui(private val a: Assets, private val batch: SpriteBatch) {
             val (dx, dy) = slots[i]
             batch.draw(a.treasures[g], x + dx, y + dy, 32f, 32f)
             // Precio: moneda pequeña + número (en rojo si no te llega el dinero)
-            val cost = Goals.COST[g]
+            val cost = costOf(g)
             if (cost > 0) {
                 batch.draw(a.smallCoin, x + dx + 20, y + dy)
                 text(cost.toString(), x + dx + 30, y + dy + 12, if (cost > coins) Color.valueOf("ff6060") else Color.WHITE)

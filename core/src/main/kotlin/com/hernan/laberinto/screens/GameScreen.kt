@@ -47,6 +47,14 @@ class GameScreen(
     private val state = GameState(setup)
     private val board get() = state.board
     private val human = state.players[0]
+
+    // Pistas (niveles de aprendizaje): la jugada que haría una IA experta
+    private val hints = level?.hints == true
+    private val hintRng = kotlin.random.Random(7)
+    private var hintPlan: AiPlan? = null
+    private var hintMask = -1
+    private var hintDest: Pos? = null
+
     private val audio = game.audio
     private val str = game.strings
 
@@ -193,6 +201,13 @@ class GameScreen(
         } else {
             phase = Phase.PLACE
             status = str["game.place"]
+            if (hints) {
+                val plan = Ai.plan(state, hintRng, skill = 1.0)
+                hintPlan = plan
+                hintMask = (0 until plan.rotations).fold(board.spare.mask) { m, _ -> com.hernan.laberinto.model.Dirs.rotateCw(m) }
+                hintDest = null
+                status = str["game.hintPlace"]
+            }
         }
     }
 
@@ -218,6 +233,10 @@ class GameScreen(
             phase = Phase.MOVE
             timer = 0f
             status = if (reach.size > 1) str["game.move"] else str["game.noPath"]
+            if (hints && reach.size > 1) {
+                hintDest = Ai.bestDestination(state)
+                status = str["game.hintMove"]
+            }
         }
     }
 
@@ -345,6 +364,7 @@ class GameScreen(
         when (phase) {
             Phase.AI_THINK -> if (timer > 0.6f) {
                 aiPlan = Ai.plan(state)
+                hintMask = -1
                 aiRotationsLeft = aiPlan!!.rotations
                 phase = Phase.AI_ROTATE
                 timer = 0f
@@ -522,6 +542,16 @@ class GameScreen(
             batch.color = Color.WHITE
         }
 
+        // Pista: casilla recomendada, en verde (encima del marco dorado de las metas)
+        val dest = hintDest
+        if (hints && phase == Phase.MOVE && dest != null) {
+            val pulse = 0.7f + 0.3f * sin(time * 8f)
+            ui.rect(cellX(dest.c) + 2, cellY(dest.r) + 2, TILE - 4f, TILE - 4f, Color(0.4f, 1f, 0.45f, 0.25f * pulse))
+            batch.color = Color(0.4f, 1f, 0.45f, pulse)
+            batch.draw(a.cursor, cellX(dest.c), cellY(dest.r))
+            batch.color = Color.WHITE
+        }
+
         drawPawns(ins, t)
     }
 
@@ -590,7 +620,16 @@ class GameScreen(
                 else -> Color(0.7f, 0.7f, 0.7f, 0.8f)
             }
             if (phase == Phase.AI_ROTATE && ins == aiPlan?.insert) batch.color = Color.WHITE
-            batch.draw(a.arrow, floor(c.x - 8 + dx), floor(c.y - 8 + dy), 8f, 8f, 16f, 16f, 1f, 1f, rot)
+            // Pista: la flecha recomendada brilla (cuando la pieza ya está bien girada)
+            val hinted = hints && active && ins == hintPlan?.insert && board.spare.mask == hintMask
+            if (hinted) {
+                val glow = 0.35f + 0.35f * sin(time * 8f)
+                val tint = batch.color.cpy()
+                ui.rect(floor(c.x - 11), floor(c.y - 11), 22f, 22f, Color(0.4f, 1f, 0.45f, glow))
+                batch.color = tint
+            }
+            val size = if (hinted) 16f * (1.15f + 0.1f * sin(time * 8f)) else 16f
+            batch.draw(a.arrow, floor(c.x - size / 2 + dx), floor(c.y - size / 2 + dy), size / 2, size / 2, size, size, 1f, 1f, rot)
         }
         batch.color = Color.WHITE
     }
@@ -630,14 +669,18 @@ class GameScreen(
                 Item.EVENT -> batch.draw(a.event, s.x + 16, s.y + 16, 32f, 32f)
             }
         }
-        if (phase == Phase.PLACE) ui.textCentered(str["game.tapRotate"], s.x + s.width / 2, s.y - 13, Ui.MUTED)
+        if (phase == Phase.PLACE) {
+            // Pista: si hay que girar la pieza, el texto parpadea en verde
+            val rotateHint = hints && hintMask >= 0 && board.spare.mask != hintMask && sin(time * 8f) > 0
+            ui.textCentered(str["game.tapRotate"], s.x + s.width / 2, s.y - 13, if (rotateHint) Color(0.4f, 1f, 0.45f, 1f) else Ui.MUTED)
+        }
 
         // Metas de la etapa actual del humano
         val gx = floor(w / 2 + 16)
         val gy = s.y - 3
         val half = Ui.GOAL_PANEL / 2
         ui.textCentered(str.stage(human.stage), gx + half, s.y + s.height + 10, Ui.GOLD)
-        ui.goalPanel(gx, gy, human.activeGoals, if (human.retiring) Ui.GOLD else Ui.BORDER, human.coins)
+        ui.goalPanel(gx, gy, human.activeGoals, if (human.retiring) Ui.GOLD else Ui.BORDER, human.coins, state::costOf)
         if (human.retiring) {
             ui.textCentered(str["game.goHome"], gx + half, s.y - 13, Ui.GOLD)
         } else if (board.spare.treasure in human.activeGoals && phase != Phase.SLIDE) {

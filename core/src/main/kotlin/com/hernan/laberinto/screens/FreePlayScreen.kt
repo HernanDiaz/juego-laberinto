@@ -25,6 +25,8 @@ class FreePlayScreen(private val game: LaberintoGame) : ScreenAdapter() {
 
     private var numAi = 1
     private var goals = 2
+    /** 0 fácil, 1 normal, 2 difícil */
+    private var difficulty = 1
     private val maxGoals get() = GameState.maxGoalsPerStage(numAi)
 
     private val options = listOf(
@@ -38,6 +40,7 @@ class FreePlayScreen(private val game: LaberintoGame) : ScreenAdapter() {
             }
         },
         OptionRow({ s["menu.treasures"] }, { goals.toString() }) { goals = (goals + it).coerceIn(1, maxGoals) },
+        OptionRow({ s["menu.difficulty"] }, { s["difficulty.$difficulty"] }) { difficulty = (difficulty + it).coerceIn(0, 2) },
     )
 
     private val buttons = Buttons(ui, game.audio)
@@ -46,7 +49,14 @@ class FreePlayScreen(private val game: LaberintoGame) : ScreenAdapter() {
     private val touch = Vector2()
     private val upgrade = UpgradePanel(game)
 
-    private fun play() = game.switchTo(GameScreen(game, GameSetup(numAi = numAi, goalsPerStage = goals)))
+    private fun play() = game.switchTo(
+        GameScreen(game, GameSetup(numAi = numAi, goalsPerStage = goals, aiSkill = SKILLS[difficulty])),
+    )
+
+    companion object {
+        /** Habilidad de la IA para fácil, normal y difícil. */
+        private val SKILLS = doubleArrayOf(0.25, 0.55, 1.0)
+    }
 
     private val input = object : InputAdapter() {
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
@@ -97,15 +107,15 @@ class FreePlayScreen(private val game: LaberintoGame) : ScreenAdapter() {
         batch.begin()
         background.draw(a, ui, batch, w, h, delta)
         ui.textCentered(s["menu.freePlay"], w / 2, h * 0.8f, Ui.GOLD, 2f)
-        var y = floor(h * 0.6f)
+        var y = floor(h * 0.64f)
         for (o in options) {
             o.draw(a, ui, batch, w, y)
             y -= 56
         }
         // Candado junto al "+" de rivales si aún no tiene el juego completo
-        if (!game.store.owned) batch.draw(a.lock, w / 2 + 76, floor(h * 0.6f) - 2)
-        playBtn.rect.set(floor(w / 2 - 70), y - 10, 140f, 38f)
-        backBtn.rect.set(floor(w / 2 - 70), y - 52, 140f, 28f)
+        if (!game.store.owned) batch.draw(a.lock, w / 2 + 76, floor(h * 0.64f) - 2)
+        playBtn.rect.set(floor(w / 2 - 70), y + 2, 140f, 38f)
+        backBtn.rect.set(floor(w / 2 - 70), y - 40, 140f, 28f)
         buttons.draw()
         upgrade.draw(batch, w, h, delta)
         batch.end()

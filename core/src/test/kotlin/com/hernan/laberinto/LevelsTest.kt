@@ -37,6 +37,51 @@ class LevelsTest {
         assertEquals(3, l.stars(l.roundsFor2, l.coinsFor3))
     }
 
+    /**
+     * Dificultad: una IA que juega "como una persona media" (habilidad 0,5; 0,8 en los niveles con
+     * pistas, porque las pistas le dicen la mejor jugada) contra los rivales de cada nivel.
+     * Imprime el porcentaje de victorias para ajustar aiSkill en levels.json.
+     */
+    @Test
+    fun dificultadDeCadaNivel() {
+        val rates = levels.map { level ->
+            val human = if (level.hints) 0.8 else 0.5
+            var wins = 0
+            var totalRounds = 0
+            val winRounds = ArrayList<Int>()
+            val winCoins = ArrayList<Int>()
+            val games = 40
+            for (seed in 1..games) {
+                val rng = Random(seed * 97 + level.index)
+                val s = GameState(level.setup, rng)
+                var turns = 0
+                while (s.winner == null && turns < 3000) {
+                    val skill = if (s.current == 0) human else level.setup.aiSkill
+                    val plan = Ai.plan(s, rng, skill)
+                    repeat(plan.rotations) { s.board.spare.rotateCw() }
+                    s.push(plan.insert)
+                    s.moveCurrent(s.board.path(s.currentPlayer.pos, plan.dest)!!)
+                    s.nextTurn()
+                    turns++
+                }
+                if (s.winner === s.players[0]) {
+                    wins++
+                    winRounds.add(s.round)
+                    winCoins.add(s.players[0].coins)
+                }
+                totalRounds += s.round
+            }
+            val rate = wins * 100 / games
+            println("DIFICULTAD nivel ${level.index + 1}: el jugador gana el $rate% (rivales=${level.setup.numAi}, " +
+                "habilidad IA=${level.setup.aiSkill}, rondas media=${totalRounds / games}) | " +
+                "cuando gana: rondas mediana=${winRounds.sorted().getOrNull(winRounds.size / 2)} " +
+                "monedas mediana=${winCoins.sorted().getOrNull(winCoins.size / 2)} | " +
+                "estrellas: rondas<=${level.roundsFor2} monedas>=${level.coinsFor3}")
+            rate
+        }
+        assertTrue(rates[0] >= 70, "El primer nivel debe ser fácil de ganar (${rates[0]}%)")
+    }
+
     /** Juega cada nivel con IAs; imprime rondas y monedas del ganador para ajustar las estrellas. */
     @Test
     fun todosLosNivelesSePuedenTerminar() {

@@ -18,6 +18,8 @@ data class Level(
     val coinsFor3: Int,
     /** Solo con el juego completo (compra única). */
     val premium: Boolean = false,
+    /** Muestra pistas (flecha y casilla recomendadas) para aprender a jugar. */
+    val hints: Boolean = false,
 ) {
     /** Estrellas conseguidas al ganar en [rounds] rondas con [coins] monedas. */
     fun stars(rounds: Int, coins: Int) = when {
@@ -54,8 +56,14 @@ object Levels {
             startCoins = v.getInt("startCoins", 0),
             costExtra = v.getInt("costExtra", 0),
             eventWeights = events,
+            aiSkill = v.getDouble("aiSkill", 1.0),
+            noCosts = v.getBoolean("noCosts", false),
         )
         val stars = v.get("stars")
-        return Level(index, v.getInt("icon"), setup, stars.getInt("rounds"), stars.getInt("coins"), v.getBoolean("premium", false))
+        return Level(
+            index, v.getInt("icon"), setup, stars.getInt("rounds"), stars.getInt("coins"),
+            premium = v.getBoolean("premium", false),
+            hints = v.getBoolean("hints", false),
+        )
     }
 }

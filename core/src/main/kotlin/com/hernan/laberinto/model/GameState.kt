@@ -64,6 +64,10 @@ data class GameSetup(
     val costExtra: Int = 0,
     /** Pesos de los sucesos que cambian respecto a los normales (0 = no sale). */
     val eventWeights: Map<EventType, Int> = emptyMap(),
+    /** Habilidad de los rivales, de 0 (despistados) a 1 (juegan lo mejor que saben). */
+    val aiSkill: Double = 1.0,
+    /** Todas las metas son gratis (para el primer nivel). */
+    val noCosts: Boolean = false,
 )
 
 /** Lo que ha pasado en un movimiento, para mostrarlo en pantalla. */
@@ -115,7 +119,7 @@ class GameState(val setup: GameSetup, val rng: Random = Random.Default) {
     }
 
     /** Precio de una meta en esta partida. */
-    fun costOf(goal: Int) = Goals.COST[goal].let { if (it > 0) it + setup.costExtra else 0 }
+    fun costOf(goal: Int) = if (setup.noCosts) 0 else Goals.COST[goal].let { if (it > 0) it + setup.costExtra else 0 }
 
     private fun eventWeight(e: EventType) = setup.eventWeights[e] ?: e.weight
 

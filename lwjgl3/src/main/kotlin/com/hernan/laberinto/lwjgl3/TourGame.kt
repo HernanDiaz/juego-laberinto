@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.PixmapIO
 import com.hernan.laberinto.LaberintoGame
+import com.hernan.laberinto.screens.GameScreen
 import java.util.zip.Deflater
 
 /**
@@ -15,7 +16,8 @@ import java.util.zip.Deflater
  *   wait:N        espera N fotogramas
  *   tap:X,Y       toque en coordenadas de ventana (origen arriba a la izquierda)
  *   key:NOMBRE    tecla (p. ej. BACK, ESCAPE, R)
- *   lang:xx       cambia el idioma (es, en, fr, de, it, pt)
+ *   lang:xx       cambia el idioma
+ *   debug:swap    fuerza una mudanza (en la pantalla de partida)
  *   shot:NOMBRE   guarda <outDir>/NOMBRE.png
  */
 class TourGame(private val outDir: String, script: String) : LaberintoGame() {
@@ -50,6 +52,9 @@ class TourGame(private val outDir: String, script: String) : LaberintoGame() {
                 waitFrames = 2
             }
             "lang" -> while (strings.language != arg) strings.cycle(1)
+            "debug" -> when (arg) {
+                "swap" -> (screen as? GameScreen)?.debugSwap()
+            }
             "shot" -> {
                 val w = Gdx.graphics.backBufferWidth
                 val h = Gdx.graphics.backBufferHeight

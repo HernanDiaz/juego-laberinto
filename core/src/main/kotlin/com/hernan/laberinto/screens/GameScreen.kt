@@ -24,6 +24,7 @@ import com.hernan.laberinto.model.GameState
 import com.hernan.laberinto.model.EventType
 import com.hernan.laberinto.model.Insert
 import com.hernan.laberinto.model.Item
+import com.hernan.laberinto.model.Player
 import com.hernan.laberinto.model.Pos
 import com.hernan.laberinto.model.Side
 import com.hernan.laberinto.model.Tile
@@ -42,7 +43,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
     private val audio = game.audio
     private val str = game.strings
 
-    private enum class Phase { PLACE, SLIDE, MOVE, WALK, AI_THINK, AI_ROTATE, OVER }
+    private enum class Phase { PLACE, SLIDE, MOVE, WALK, SWAP, AI_THINK, AI_ROTATE, OVER }
 
     private var phase = Phase.PLACE
     private var timer = 0f
@@ -64,6 +65,12 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
     private val soundBtn = Rectangle()
     private var lastStep = 0
     private val pickedThisWalk = HashSet<Tile>()
+
+    // Mudanza: las dos fichas saltan y se cruzan hasta la casilla de la otra
+    private var swapA: Player? = null
+    private var swapB: Player? = null
+    private var swapFromA = Pos(0, 0)
+    private var swapFromB = Pos(0, 0)
     private val touch = Vector2()
 
     // Pausa
@@ -202,11 +209,42 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         }
         r.event?.let { e ->
             audio.play(audio.event)
-            showToast(
-                if (e == EventType.SWAP) str.format("event.SWAP", str.player(p.index), str.player(r.swappedWith!!.index))
-                else str.format("event.${e.name}", str.player(p.index), kotlin.math.abs(r.eventCoins)),
-            )
+            if (e == EventType.SWAP) {
+                // Se avisa al momento (sin esperar a otros avisos) y se anima el cambio de sitio
+                val other = r.swappedWith!!
+                showToastNow(str.format("event.SWAP", str.player(p.index), str.player(other.index)))
+                swapA = p
+                swapB = other
+                swapFromA = walkPath.last()
+                swapFromB = p.pos
+                phase = Phase.SWAP
+                timer = 0f
+                return
+            }
+            showToast(str.format("event.${e.name}", str.player(p.index), kotlin.math.abs(r.eventCoins)))
         }
+        endTurn()
+    }
+
+    /** Solo para el modo tour de escritorio: fuerza una mudanza entre el jugador y el primer rival. */
+    fun debugSwap() {
+        if (phase != Phase.PLACE) return
+        val other = state.players[1]
+        swapA = human
+        swapB = other
+        swapFromA = human.pos
+        swapFromB = other.pos
+        human.pos = swapFromB
+        other.pos = swapFromA
+        audio.play(audio.event)
+        showToastNow(str.format("event.SWAP", str.player(human.index), str.player(other.index)))
+        phase = Phase.SWAP
+        timer = 0f
+    }
+
+    private fun endTurn() {
+        swapA = null
+        swapB = null
         val winner = state.winner
         if (winner != null) {
             phase = Phase.OVER
@@ -217,6 +255,13 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         }
         state.nextTurn()
         startTurn()
+    }
+
+    /** Muestra un aviso ya, descartando los que esperaban. */
+    private fun showToastNow(msg: String) {
+        pendingToasts.clear()
+        toast = msg
+        toastTime = TOAST_TIME + 0.6f
     }
 
     /** Los avisos se muestran de uno en uno, en orden. */
@@ -275,6 +320,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
                 }
                 if (timer >= STEP_TIME * (walkPath.size - 1)) finishWalk()
             }
+            Phase.SWAP -> if (timer >= SWAP_TIME) endTurn()
             else -> {}
         }
     }
@@ -436,7 +482,12 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
             group.forEachIndexed { i, p ->
                 var x: Float
                 var y: Float
-                if (phase == Phase.WALK && p === state.currentPlayer && walkPath.size > 1) {
+                if (phase == Phase.SWAP && (p === swapA || p === swapB)) {
+                    val from = if (p === swapA) swapFromA else swapFromB
+                    val f = Interpolation.smooth.apply((timer / SWAP_TIME).coerceIn(0f, 1f))
+                    x = MathUtils.lerp(cellX(from.c), cellX(p.pos.c), f)
+                    y = MathUtils.lerp(cellY(from.r), cellY(p.pos.r), f) + sin(f * MathUtils.PI) * 18f
+                } else if (phase == Phase.WALK && p === state.currentPlayer && walkPath.size > 1) {
                     val f = (timer / STEP_TIME).coerceIn(0f, walkPath.size - 1f)
                     val idx = f.toInt().coerceAtMost(walkPath.size - 2)
                     val frac = f - idx
@@ -597,5 +648,6 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         const val SLIDE_TIME = 0.35f
         const val STEP_TIME = 0.12f
         const val TOAST_TIME = 1.8f
+        const val SWAP_TIME = 0.8f
     }
 }

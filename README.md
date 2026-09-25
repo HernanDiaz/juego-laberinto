@@ -9,6 +9,15 @@ que quiera dentro de cada etapa, y gana el primero que vuelve a casa para jubila
 - **Sucesos:** terminar en una casilla "?" provoca herencia, lotería, multa, factura, regalo o mudanza.
 - **Rivales:** cada IA tiene una personalidad (ambicioso, aventurero o tranquilo) que cambia sus prioridades.
 
+## Niveles
+8 niveles en `assets/levels.json` (tablero, rivales, precios, sucesos y umbrales de estrellas); sus
+nombres y descripciones son `level.N.name` / `level.N.desc` en los textos. Estrellas: 1 por ganar,
+2 si además ganas en `stars.rounds` rondas o menos, 3 si además terminas con `stars.coins` monedas.
+`LevelsTest` juega cada nivel con IAs e imprime rondas y monedas típicas para ajustar los umbrales.
+
+En `board`, `pushLines` son las filas/columnas que se empujan (las casillas cuya fila y columna no se
+empujan son fijas) y `straight`, `corner`, `tee`, `cross`, `deadEnd` son los pesos de cada pieza.
+
 ## Módulos
 - `core/` – lógica (tablero, reglas, IA) y pantallas.
 - `android/` – lanzador de Android.

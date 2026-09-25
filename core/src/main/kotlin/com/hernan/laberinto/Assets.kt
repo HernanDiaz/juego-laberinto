@@ -56,6 +56,15 @@ class Assets : Disposable {
     val event = TextureRegion(itemsTex, 16, 0, 16, 16)
     val smallCoin = TextureRegion(itemsTex, 32, 0, 8, 8)
 
+    private val mapTex = tex("map.png")
+    val star = TextureRegion(mapTex, 0, 0, 16, 16)
+    val starEmpty = TextureRegion(mapTex, 16, 0, 16, 16)
+    val smallStar = TextureRegion(mapTex, 32, 0, 8, 8)
+    val smallStarEmpty = TextureRegion(mapTex, 40, 0, 8, 8)
+    val lock = TextureRegion(mapTex, 48, 0, 16, 16)
+    val nodeOpen = TextureRegion(mapTex, 0, 16, 28, 28)
+    val nodeLocked = TextureRegion(mapTex, 28, 16, 28, 28)
+
     /** Fuente bitmap y el centro visual de sus mayúsculas (px desde el borde superior de la línea). */
     class FontInfo(val font: BitmapFont, val capCenter: Float, val breakAnywhere: Boolean)
 

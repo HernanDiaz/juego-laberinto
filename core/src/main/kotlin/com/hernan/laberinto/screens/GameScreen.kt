@@ -22,6 +22,8 @@ import com.hernan.laberinto.model.AiPlan
 import com.hernan.laberinto.model.Board
 import com.hernan.laberinto.model.GameState
 import com.hernan.laberinto.model.EventType
+import com.hernan.laberinto.model.GameSetup
+import com.hernan.laberinto.model.Level
 import com.hernan.laberinto.model.Insert
 import com.hernan.laberinto.model.Item
 import com.hernan.laberinto.model.Player
@@ -31,13 +33,18 @@ import com.hernan.laberinto.model.Tile
 import kotlin.math.floor
 import kotlin.math.sin
 
-class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int) : ScreenAdapter() {
+/** Partida. Con [level] es un nivel del mapa (cuenta estrellas); sin él, una partida libre. */
+class GameScreen(
+    private val game: LaberintoGame,
+    private val setup: GameSetup,
+    private val level: Level? = null,
+) : ScreenAdapter() {
     private val a = game.assets
     private val ui = game.ui
     private val batch = game.batch
     private val viewport = ExtendViewport(MenuScreen.WORLD_W, MenuScreen.WORLD_H)
 
-    private val state = GameState(numAi, goalsPerStage)
+    private val state = GameState(setup)
     private val board get() = state.board
     private val human = state.players[0]
     private val audio = game.audio
@@ -79,25 +86,57 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
     private val pauseButtons = Buttons(ui, audio).apply {
         add(a.greenButton, 1f, { str["pause.resume"] }) { paused = false }
         add(a.slateButton, 1f, { str["menu.howto"] }) { game.overlay(InstructionsScreen(game, this@GameScreen)) }
-        add(a.slateButton, 1f, { str["pause.menu"] }) { game.switchTo(MenuScreen(game)) }
+        add(a.slateButton, 1f, { str[if (level != null) "over.map" else "pause.menu"] }) { leave() }
+    }
+
+    // Final de partida: estrellas conseguidas y botones
+    private var starsWon = 0
+    private val overButtons = Buttons(ui, audio)
+    private val nextLevel: Level? get() = level?.let { game.levels.getOrNull(it.index + 1) }
+
+    private fun restart() = game.switchTo(GameScreen(game, setup, level))
+
+    /** Vuelve al mapa (niveles) o al menú (partida libre). */
+    private fun leave() = game.switchTo(if (level != null) LevelMapScreen(game) else MenuScreen(game))
+
+    private fun buildOverButtons() {
+        val won = state.winner === human
+        if (level != null) {
+            val next = nextLevel
+            if (won && next != null) {
+                overButtons.add(a.greenButton, 1f, { str["over.next"] }) { game.switchTo(GameScreen(game, next.setup, next)) }
+                overButtons.add(a.slateButton, 1f, { str["over.retry"] }) { restart() }
+            } else {
+                overButtons.add(if (won) a.slateButton else a.greenButton, 1f, { str["over.retry"] }) { restart() }
+            }
+            overButtons.add(a.slateButton, 1f, { str["over.map"] }) { leave() }
+        } else {
+            overButtons.add(a.greenButton, 1f, { str["over.again"] }) { restart() }
+            overButtons.add(a.slateButton, 1f, { str["pause.menu"] }) { leave() }
+        }
     }
 
     private val input = object : InputAdapter() {
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))
-            if (paused) pauseButtons.down(touch.x, touch.y) else onTouch(touch.x, touch.y)
+            when {
+                paused -> pauseButtons.down(touch.x, touch.y)
+                phase == Phase.OVER -> if (timer > 0.8f) overButtons.down(touch.x, touch.y)
+                else -> onTouch(touch.x, touch.y)
+            }
             return true
         }
 
         override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))
             if (paused) pauseButtons.drag(touch.x, touch.y)
+            if (phase == Phase.OVER) overButtons.drag(touch.x, touch.y)
             return true
         }
 
         override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))
-            if (paused) pauseButtons.up(touch.x, touch.y)
+            if (paused) pauseButtons.up(touch.x, touch.y) else if (phase == Phase.OVER) overButtons.up(touch.x, touch.y)
             return true
         }
 
@@ -105,7 +144,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
             when (keycode) {
                 Input.Keys.BACK, Input.Keys.ESCAPE ->
                     if (phase == Phase.OVER) {
-                        game.switchTo(MenuScreen(game))
+                        leave()
                     } else {
                         paused = !paused
                         audio.play(audio.click)
@@ -242,6 +281,15 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         timer = 0f
     }
 
+    /** Solo para el modo tour de escritorio: el jugador gana al instante. */
+    fun debugWin() {
+        if (phase != Phase.PLACE) return
+        human.stages.forEach { it.clear() }
+        human.pos = human.home
+        state.moveCurrent(listOf(human.home))
+        endTurn()
+    }
+
     private fun endTurn() {
         swapA = null
         swapB = null
@@ -251,6 +299,11 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
             timer = 0f
             audio.play(if (winner === human) audio.win else audio.lose)
             status = ""
+            if (level != null && winner === human) {
+                starsWon = level.stars(state.round, human.coins)
+                game.progress.record(level.index, starsWon)
+            }
+            buildOverButtons()
             return
         }
         state.nextTurn()
@@ -336,16 +389,12 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
             return
         }
         when (phase) {
-            Phase.OVER -> if (timer > 0.8f) {
-                audio.play(audio.click)
-                game.switchTo(MenuScreen(game))
-            }
             Phase.PLACE -> {
                 if (spareRect.contains(x, y)) {
                     rotateSpare()
                     return
                 }
-                val ins = Insert.ALL.firstOrNull { arrowRect(it).contains(x, y) } ?: return
+                val ins = board.config.inserts.firstOrNull { arrowRect(it).contains(x, y) } ?: return
                 if (ins in state.allowedInserts()) {
                     beginSlide(ins)
                 } else {
@@ -522,7 +571,7 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
         val allowed = state.allowedInserts()
         val active = phase == Phase.PLACE
         val c = Vector2()
-        for (ins in Insert.ALL) {
+        for (ins in board.config.inserts) {
             arrowCenter(ins, c)
             val ok = ins in allowed
             val bob = if (active && ok) sin(time * 5f) * 1.5f else 0f
@@ -606,16 +655,55 @@ class GameScreen(private val game: LaberintoGame, numAi: Int, goalsPerStage: Int
     private fun drawGameOver() {
         val w = viewport.worldWidth
         val h = viewport.worldHeight
-        ui.rect(0f, 0f, w, h, Color(0f, 0f, 0f, 0.65f))
+        ui.rect(0f, 0f, w, h, Color(0f, 0f, 0f, 0.7f))
         val winner = state.winner ?: return
-        val title = if (winner === human) str["game.youWin"] else str.format("game.wins", str.player(winner.index).uppercase())
-        ui.textCentered(title, w / 2, h / 2 + 28, if (winner === human) Ui.GOLD else Assets.PLAYER_COLORS[winner.index], 2f)
-        batch.draw(a.pawns[winner.index], w / 2 - 16, h / 2 - 20, 32f, 32f)
-        if (timer > 0.8f) ui.textCentered(str["game.tapMenu"], w / 2, h / 2 - 40, Color.WHITE)
+        val won = winner === human
+        var y = h / 2 + 96
+        val title = if (won) str["game.youWin"] else str.format("game.wins", str.player(winner.index).uppercase())
+        ui.textCentered(title, w / 2, y, if (won) Ui.GOLD else Assets.PLAYER_COLORS[winner.index], 2f)
+        y -= 44
+        batch.draw(a.pawns[winner.index], w / 2 - 16, y - 16, 32f, 32f)
+        y -= 36
+
+        if (level != null && won) {
+            // Las estrellas aparecen una a una
+            for (k in 0 until 3) {
+                val appear = ((timer - 0.4f - k * 0.35f) / 0.25f).coerceIn(0f, 1f)
+                val filled = k < starsWon && appear > 0f
+                val size = 32f * if (filled) (1f + 0.3f * sin(appear * MathUtils.PI)) else 1f
+                batch.draw(if (filled) a.star else a.starEmpty, w / 2 - 52 + k * 36f + 16 - size / 2, y - size / 2, size, size)
+            }
+            y -= 30
+            ui.textCentered(str.format("game.round", state.round), w / 2 - 24, y, Color.WHITE)
+            batch.draw(a.smallCoin, w / 2 + 22, y - 4)
+            ui.textCentered(human.coins.toString(), w / 2 + 38, y, Color.WHITE)
+            y -= 22
+        } else if (!won) {
+            ui.textCentered(str["over.lost"], w / 2, y, Color.WHITE)
+            y -= 22
+        }
+
+        if (timer > 0.8f) {
+            var by = y - 24
+            for (b in overButtons.all) {
+                b.rect.set(floor(w / 2 - 70), by, 140f, 28f)
+                by -= 34
+            }
+            overButtons.draw()
+        }
     }
 
     /** Botón MENÚ (abajo a la izquierda, abre la pausa) y botón de sonido (abajo a la derecha). */
     private fun drawCornerButtons() {
+        if (level != null && phase != Phase.OVER) {
+            val w = viewport.worldWidth
+            val text = str.format("game.round", state.round)
+            val tw = ui.textWidth(text)
+            val x = floor(w / 2 - (tw + 24) / 2)
+            ui.text(text, x, 19f, if (state.round <= level.roundsFor2) Color.WHITE else Ui.MUTED)
+            batch.draw(a.smallStar, x + tw + 6, 9f)
+            ui.text(level.roundsFor2.toString(), x + tw + 16, 19f, Ui.GOLD)
+        }
         if (phase != Phase.OVER) {
             val label = str["game.menu"]
             pauseBtn.set(2f, 2f, maxOf(44f, floor(ui.textWidth(label) + 16)), 22f)

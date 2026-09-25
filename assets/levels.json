@@ -1,0 +1,73 @@
+[
+  {
+    "comment": "1. El barrio: tablero muy estable (solo se mueven las filas 2 y 4), sin callejones ni sucesos",
+    "icon": 6,
+    "rivals": ["CALM"],
+    "goalsPerStage": 1,
+    "startCoins": 2,
+    "board": { "pushLines": [2, 4], "straight": 8, "corner": 10, "tee": 10, "cross": 6, "deadEnd": 0, "coins": 6, "events": 0 },
+    "stars": { "rounds": 6, "coins": 5 }
+  },
+  {
+    "comment": "2. El instituto: aparecen las casillas ? y algún callejón",
+    "icon": 0,
+    "rivals": ["ADVENTUROUS"],
+    "goalsPerStage": 2,
+    "board": { "pushLines": [2, 4], "straight": 8, "corner": 10, "tee": 10, "cross": 4, "deadEnd": 2, "coins": 6, "events": 4 },
+    "stars": { "rounds": 8, "coins": 7 }
+  },
+  {
+    "comment": "3. La ciudad: el tablero de 16 entradas y metas algo más caras",
+    "icon": 9,
+    "rivals": ["AMBITIOUS"],
+    "goalsPerStage": 2,
+    "costExtra": 1,
+    "board": { "pushLines": [1, 2, 4, 5] },
+    "stars": { "rounds": 13, "coins": 4 }
+  },
+  {
+    "comment": "4. La gran ciudad: dos rivales y más callejones sin salida",
+    "icon": 8,
+    "rivals": ["CALM", "AMBITIOUS"],
+    "goalsPerStage": 2,
+    "board": { "pushLines": [1, 2, 4, 5], "straight": 9, "corner": 13, "tee": 9, "cross": 3, "deadEnd": 7 },
+    "stars": { "rounds": 13, "coins": 7 }
+  },
+  {
+    "comment": "5. La crisis: multas y facturas frecuentes, pocas alegrías",
+    "icon": 21,
+    "rivals": ["CALM", "ADVENTUROUS"],
+    "goalsPerStage": 2,
+    "board": { "pushLines": [1, 2, 4, 5], "coins": 4, "events": 7 },
+    "events": { "FINE": 6, "BILL": 5, "INHERITANCE": 1, "LOTTERY": 0, "GIFT": 1, "SWAP": 1 },
+    "stars": { "rounds": 13, "coins": 4 }
+  },
+  {
+    "comment": "6. La lotería: muchas casillas ? y premios, pero todo cuesta más",
+    "icon": 7,
+    "rivals": ["ADVENTUROUS", "AMBITIOUS"],
+    "goalsPerStage": 2,
+    "costExtra": 1,
+    "board": { "pushLines": [1, 2, 4, 5], "events": 7 },
+    "events": { "LOTTERY": 3, "INHERITANCE": 4, "GIFT": 4, "FINE": 1, "BILL": 1, "SWAP": 1 },
+    "stars": { "rounds": 12, "coins": 9 }
+  },
+  {
+    "comment": "7. La mudanza: solo las esquinas son fijas (20 entradas) y las mudanzas son frecuentes",
+    "icon": 12,
+    "rivals": ["CALM", "ADVENTUROUS", "AMBITIOUS"],
+    "goalsPerStage": 2,
+    "board": { "pushLines": [1, 2, 3, 4, 5], "events": 5 },
+    "events": { "SWAP": 6 },
+    "stars": { "rounds": 16, "coins": 6 }
+  },
+  {
+    "comment": "8. La jubilación dorada: tres rivales, muchos callejones y todo más caro",
+    "icon": 17,
+    "rivals": ["AMBITIOUS", "ADVENTUROUS", "CALM"],
+    "goalsPerStage": 2,
+    "costExtra": 1,
+    "board": { "pushLines": [1, 2, 4, 5], "straight": 9, "corner": 12, "tee": 9, "cross": 3, "deadEnd": 8, "events": 5 },
+    "stars": { "rounds": 14, "coins": 6 }
+  }
+]

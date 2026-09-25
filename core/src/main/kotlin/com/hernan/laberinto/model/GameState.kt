@@ -52,6 +52,20 @@ class Player(val index: Int, val isAi: Boolean, val home: Pos, val personality: 
     val total get() = collected + stages.sumOf { it.size }
 }
 
+/** Configuración de una partida: la de un nivel o la de la partida libre. */
+data class GameSetup(
+    val numAi: Int = 1,
+    val goalsPerStage: Int = 2,
+    /** Personalidad de cada rival; null = al azar. */
+    val personalities: List<Personality>? = null,
+    val board: BoardConfig = BoardConfig(),
+    val startCoins: Int = 0,
+    /** Monedas que se suman al precio de cada meta de pago. */
+    val costExtra: Int = 0,
+    /** Pesos de los sucesos que cambian respecto a los normales (0 = no sale). */
+    val eventWeights: Map<EventType, Int> = emptyMap(),
+)
+
 /** Lo que ha pasado en un movimiento, para mostrarlo en pantalla. */
 data class MoveResult(
     val goal: Int = -1,
@@ -65,8 +79,11 @@ data class MoveResult(
     val swappedWith: Player? = null,
 )
 
-class GameState(numAi: Int, goalsPerStage: Int, val rng: Random = Random.Default) {
-    val board = Board.generate(rng)
+class GameState(val setup: GameSetup, val rng: Random = Random.Default) {
+    constructor(numAi: Int, goalsPerStage: Int, rng: Random = Random.Default) :
+        this(GameSetup(numAi = numAi, goalsPerStage = goalsPerStage), rng)
+
+    val board = Board.generate(rng, setup.board)
     val players: List<Player>
     var current = 0
         private set
@@ -75,24 +92,37 @@ class GameState(numAi: Int, goalsPerStage: Int, val rng: Random = Random.Default
     var winner: Player? = null
         private set
 
+    /** Ronda actual: empieza en 1 y sube cada vez que vuelve a tocarle al jugador humano. */
+    var round = 1
+        private set
+
     init {
+        val numAi = setup.numAi
+        val goalsPerStage = setup.goalsPerStage
         require(numAi in 1..3)
         val count = numAi + 1
         require(goalsPerStage in 1..maxGoalsPerStage(numAi))
-        val personalities = Personality.entries.shuffled(rng)
+        val personalities = setup.personalities ?: Personality.entries.shuffled(rng)
+        require(personalities.size >= numAi) { "Faltan personalidades para los rivales" }
         players = (0 until count).map { i ->
             Player(i, isAi = i != 0, home = HOMES[i], personality = if (i == 0) null else personalities[i - 1])
         }
+        players.forEach { it.coins = setup.startCoins }
         for (s in 0 until Goals.STAGES) {
             val pool = Goals.ofStage(s).shuffled(rng)
             for (i in 0 until goalsPerStage) for (p in players) p.stages[s].add(pool[i * count + p.index])
         }
     }
 
+    /** Precio de una meta en esta partida. */
+    fun costOf(goal: Int) = Goals.COST[goal].let { if (it > 0) it + setup.costExtra else 0 }
+
+    private fun eventWeight(e: EventType) = setup.eventWeights[e] ?: e.weight
+
     val currentPlayer get() = players[current]
 
     /** Todas las entradas menos la que desharía el último empuje. */
-    fun allowedInserts() = Insert.ALL.filter { it != lastInsert?.opposite() }
+    fun allowedInserts() = board.config.inserts.filter { it != lastInsert?.opposite() }
 
     fun push(ins: Insert) {
         require(ins in allowedInserts()) { "Empuje no permitido: $ins" }
@@ -138,7 +168,7 @@ class GameState(numAi: Int, goalsPerStage: Int, val rng: Random = Random.Default
         val tile = board[to]
         if (tile.treasure >= 0 && tile.treasure in p.activeGoals) {
             val goal = tile.treasure
-            val cost = Goals.COST[goal]
+            val cost = costOf(goal)
             if (p.coins >= cost) {
                 p.coins -= cost
                 p.coins += Goals.REWARD[goal]
@@ -164,9 +194,10 @@ class GameState(numAi: Int, goalsPerStage: Int, val rng: Random = Random.Default
 
     private fun applyEvent(p: Player, result: MoveResult): MoveResult {
         val others = players.filter { it !== p }
-        val options = EventType.entries.filter { it != EventType.SWAP || others.isNotEmpty() }
-        var roll = rng.nextInt(options.sumOf { it.weight })
-        val event = options.first { e -> (roll < e.weight).also { roll -= e.weight } }
+        val options = EventType.entries.filter { eventWeight(it) > 0 && (it != EventType.SWAP || others.isNotEmpty()) }
+        if (options.isEmpty()) return result
+        var roll = rng.nextInt(options.sumOf { eventWeight(it) })
+        val event = options.first { e -> (roll < eventWeight(e)).also { roll -= eventWeight(e) } }
         return when (event) {
             EventType.SWAP -> {
                 val other = others.random(rng)
@@ -191,6 +222,7 @@ class GameState(numAi: Int, goalsPerStage: Int, val rng: Random = Random.Default
 
     fun nextTurn() {
         current = (current + 1) % players.size
+        if (current == 0) round++
     }
 
     companion object {

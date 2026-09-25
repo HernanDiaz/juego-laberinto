@@ -61,17 +61,36 @@ data class Insert(val side: Side, val index: Int) {
         Side.BOTTOM -> (Board.SIZE - 1 downTo 0).map { Pos(it, index) }
     }
 
-    companion object {
-        val ALL: List<Insert> = Side.entries.flatMap { s -> Board.PUSH_LINES.map { Insert(s, it) } }
-    }
 }
 
-class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
+/**
+ * Cómo se construye un tablero (cada nivel puede tener el suyo).
+ * - [pushLines]: filas y columnas que se pueden empujar. Las casillas cuya fila y columna
+ *   no se empujan nunca se mueven (piezas fijas).
+ * - Pesos de cada tipo de pieza móvil; se reparten en proporción entre las piezas necesarias.
+ */
+data class BoardConfig(
+    val pushLines: List<Int> = listOf(1, 2, 4, 5),
+    val straight: Int = 10,
+    val corner: Int = 14,
+    val tee: Int = 10,
+    val cross: Int = 3,
+    val deadEnd: Int = 4,
+    val coins: Int = 6,
+    val events: Int = 4,
+) {
+    /** Entradas por las que se puede meter la pieza suelta. */
+    val inserts: List<Insert> = Side.entries.flatMap { s -> pushLines.map { Insert(s, it) } }
+
+    fun isFixed(r: Int, c: Int) = r !in pushLines && c !in pushLines
+}
+
+class Board(private val grid: Array<Array<Tile>>, var spare: Tile, val config: BoardConfig = BoardConfig()) {
 
     operator fun get(p: Pos) = grid[p.r][p.c]
     operator fun get(r: Int, c: Int) = grid[r][c]
 
-    fun copy() = Board(Array(SIZE) { r -> Array(SIZE) { c -> grid[r][c].copy() } }, spare.copy())
+    fun copy() = Board(Array(SIZE) { r -> Array(SIZE) { c -> grid[r][c].copy() } }, spare.copy(), config)
 
     /**
      * Introduce la pieza suelta por [ins]. La pieza expulsada pasa a ser la nueva pieza suelta.
@@ -153,19 +172,13 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
         private const val DEAD_END = Dirs.N
 
         /**
-         * Filas y columnas que se pueden empujar: 1, 2, 4 y 5 (16 entradas en parejas).
-         * Las líneas 0, 3 y 6 no se mueven: sus cruces son las 9 piezas fijas.
+         * Piezas fijas: esquinas (casas) hacia dentro, bordes en T hacia dentro, plaza central en cruz
+         * y el resto de fijas interiores al azar entre cruces y T.
          */
-        val PUSH_LINES = listOf(1, 2, 4, 5)
-        private val FIXED_LINES = setOf(0, 3, 6)
-
-        fun isFixed(r: Int, c: Int) = r in FIXED_LINES && c in FIXED_LINES
-
-        /** Piezas fijas: esquinas (casas) hacia dentro, centros de los bordes en T y una plaza en cruz. */
-        private fun fixedMask(r: Int, c: Int): Int {
+        private fun fixedTile(r: Int, c: Int, rng: Random): Tile {
             val n = Dirs.N; val e = Dirs.E; val s = Dirs.S; val w = Dirs.W
             val last = SIZE - 1
-            return when {
+            val mask = when {
                 r == 0 && c == 0 -> e or s
                 r == 0 && c == last -> w or s
                 r == last && c == 0 -> n or e
@@ -174,14 +187,30 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
                 r == last -> n or e or w
                 c == 0 -> n or e or s
                 c == last -> n or s or w
-                else -> CROSS // plaza central
+                r == SIZE / 2 && c == SIZE / 2 -> CROSS
+                rng.nextInt(3) == 0 -> CROSS
+                else -> (0 until rng.nextInt(4)).fold(TEE) { m, _ -> Dirs.rotateCw(m) }
             }
+            return Tile(mask, fixed = true)
+        }
+
+        /** Reparte [total] piezas en proporción a los pesos (método del mayor resto). */
+        private fun distribute(total: Int, weights: List<Int>): List<Int> {
+            val sum = weights.sum()
+            val exact = weights.map { it.toDouble() * total / sum }
+            val counts = exact.map { it.toInt() }.toMutableList()
+            val order = exact.indices.sortedByDescending { exact[it] - counts[it] }
+            var missing = total - counts.sum()
+            for (k in order) {
+                if (missing == 0) break
+                counts[k]++
+                missing--
+            }
+            return counts
         }
 
         fun isCorner(r: Int, c: Int) = (r == 0 || r == SIZE - 1) && (c == 0 || c == SIZE - 1)
 
-        const val COINS = 6
-        const val EVENTS = 4
 
         /** Camino hasta [to] dentro de un árbol de [paths], ambos extremos incluidos. */
         fun pathIn(prev: Map<Pos, Pos?>, to: Pos): List<Pos>? {
@@ -197,40 +226,41 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile) {
         }
 
         /**
-         * Tablero aleatorio: 9 fijas (4 metas en los centros de los bordes) + 41 móviles:
-         * 10 rectas, 14 curvas (6 con meta), 10 en T (8 con meta), 3 cruces (2 con meta)
-         * y 4 callejones sin salida (todos con meta).
+         * Tablero aleatorio según [config]: piezas fijas donde ni la fila ni la columna se empujan,
+         * piezas móviles repartidas según los pesos, 24 metas (primero en los callejones sin
+         * salida, luego en piezas que no sean rectas) y las monedas y sucesos en casillas libres.
          */
-        fun generate(rng: Random): Board {
-            val treasures = (0 until TREASURES).shuffled(rng).iterator()
+        fun generate(rng: Random, config: BoardConfig = BoardConfig()): Board {
+            val movableCells = (0 until SIZE).sumOf { r -> (0 until SIZE).count { c -> !config.isFixed(r, c) } }
+            val counts = distribute(
+                movableCells + 1, // + la pieza suelta
+                listOf(config.straight, config.corner, config.tee, config.cross, config.deadEnd),
+            )
+            val masks = listOf(STRAIGHT, CORNER, TEE, CROSS, DEAD_END)
             val movable = ArrayList<Tile>()
-            repeat(10) { movable.add(Tile(STRAIGHT)) }
-            repeat(8) { movable.add(Tile(CORNER)) }
-            repeat(6) { movable.add(Tile(CORNER, treasures.next())) }
-            repeat(2) { movable.add(Tile(TEE)) }
-            repeat(8) { movable.add(Tile(TEE, treasures.next())) }
-            repeat(1) { movable.add(Tile(CROSS)) }
-            repeat(2) { movable.add(Tile(CROSS, treasures.next())) }
-            repeat(4) { movable.add(Tile(DEAD_END, treasures.next())) }
+            counts.forEachIndexed { k, n -> repeat(n) { movable.add(Tile(masks[k])) } }
             movable.shuffle(rng)
             movable.forEach { t -> repeat(rng.nextInt(4)) { t.rotateCw() } }
             val it = movable.iterator()
 
             val grid = Array(SIZE) { r ->
-                Array(SIZE) { c ->
-                    if (isFixed(r, c)) {
-                        val goal = if (isCorner(r, c) || (r == 3 && c == 3)) -1 else treasures.next()
-                        Tile(fixedMask(r, c), goal, fixed = true)
-                    } else {
-                        it.next()
-                    }
-                }
+                Array(SIZE) { c -> if (config.isFixed(r, c)) fixedTile(r, c, rng) else it.next() }
             }
-            val board = Board(grid, it.next())
+            val board = Board(grid, it.next(), config)
+
+            // Metas: callejones sin salida primero, luego el resto de piezas que no son rectas
+            val center = Pos(SIZE / 2, SIZE / 2)
+            val candidates = board.allCells().filter { !isCorner(it.r, it.c) && it != center }.map { board[it] } + board.spare
+            val deadEnds = candidates.filter { Integer.bitCount(it.mask) == 1 }.shuffled(rng)
+            val others = candidates.filter { Integer.bitCount(it.mask) > 1 }.shuffled(rng)
+                .sortedBy { if (it.mask == STRAIGHT || it.mask == Dirs.rotateCw(STRAIGHT)) 1 else 0 }
+            val goals = (0 until TREASURES).shuffled(rng)
+            (deadEnds + others).take(TREASURES).forEachIndexed { k, tile -> tile.treasure = goals[k] }
+
             // Sucesos y monedas en casillas sin meta
             val free = board.emptyCells().shuffled(rng)
-            free.take(EVENTS).forEach { board[it].item = Item.EVENT }
-            free.drop(EVENTS).take(COINS).forEach { board[it].item = Item.COIN }
+            free.take(config.events).forEach { board[it].item = Item.EVENT }
+            free.drop(config.events).take(config.coins).forEach { board[it].item = Item.COIN }
             return board
         }
     }

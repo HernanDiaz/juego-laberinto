@@ -36,7 +36,7 @@ object Ai {
 
                 val start = positions[me.index]
                 val tree = b.paths(start)
-                val targets = targetsOf(me, b)
+                val targets = targetsOf(state, me, b)
 
                 var hinder = 0.0
                 if (next !== me) {
@@ -51,7 +51,7 @@ object Ai {
                     var score = coinsOnPath * w.coin - hinder
 
                     val goal = tile.treasure
-                    if (goal >= 0 && goal in me.activeGoals && me.coins + coinsOnPath >= Goals.COST[goal]) {
+                    if (goal >= 0 && goal in me.activeGoals && me.coins + coinsOnPath >= state.costOf(goal)) {
                         score += 1000.0 + Goals.REWARD[goal] * 20
                     }
                     if (me.retiring && dest == me.home) score += 1000.0
@@ -73,9 +73,9 @@ object Ai {
      * Hacia dónde conviene acercarse: su casa si se jubila; si no, las metas activas que ya puede
      * pagar; y si no puede pagar ninguna, las monedas del tablero.
      */
-    private fun targetsOf(me: Player, b: Board): List<Pos> {
+    private fun targetsOf(state: GameState, me: Player, b: Board): List<Pos> {
         if (me.retiring) return listOf(me.home)
-        val affordable = me.activeGoals.filter { Goals.COST[it] <= me.coins }.mapNotNull { b.find(it) }
+        val affordable = me.activeGoals.filter { state.costOf(it) <= me.coins }.mapNotNull { b.find(it) }
         if (affordable.isNotEmpty()) return affordable
         val coins = b.allCells().filter { b[it].item == Item.COIN }
         return coins.ifEmpty { GameState.goalsOf(me, b) }

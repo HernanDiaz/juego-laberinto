@@ -18,6 +18,8 @@ import java.util.zip.Deflater
  *   key:NOMBRE    tecla (p. ej. BACK, ESCAPE, R)
  *   lang:xx       cambia el idioma
  *   debug:swap    fuerza una mudanza (en la pantalla de partida)
+ *   debug:win     el jugador gana al instante
+ *   debug:resetprogress  borra las estrellas guardadas
  *   shot:NOMBRE   guarda <outDir>/NOMBRE.png
  */
 class TourGame(private val outDir: String, script: String) : LaberintoGame() {
@@ -54,6 +56,8 @@ class TourGame(private val outDir: String, script: String) : LaberintoGame() {
             "lang" -> while (strings.language != arg) strings.cycle(1)
             "debug" -> when (arg) {
                 "swap" -> (screen as? GameScreen)?.debugSwap()
+                "win" -> (screen as? GameScreen)?.debugWin()
+                "resetprogress" -> progress.reset()
             }
             "shot" -> {
                 val w = Gdx.graphics.backBufferWidth

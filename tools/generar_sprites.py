@@ -672,6 +672,82 @@ def generar_objetos():
     hoja.save(os.path.join(ASSETS, "items.png"))
 
 
+ESTRELLA = """
+.......Y.......
+......YYY......
+......YYY......
+.....YYWYY.....
+YYYYYYYWYYYYYYy
+.YYYYYYYYYYYYy.
+..YYYYYYYYYYy..
+...YYYYYYYYy...
+...YYYYYYYYy...
+..YYYYYyYYYYy..
+..YYYy...yYYy..
+.YYy.......yYy.
+.Yy.........yy.
+"""
+
+ESTRELLA_PEQUENA = """
+...Y...
+..YYY..
+YYYYYYy
+.YYYYy.
+.YyYYy.
+Yy...yy
+"""
+
+CANDADO = """
+..gggg..
+.g....g.
+.g....g.
+wwwwwwww
+wWWWWWWw
+wWWkkWWw
+wWWkkWWw
+wWWWWWWw
+wwwwwwww
+"""
+
+
+def insignia(anillo_claro, anillo_oscuro):
+    """Círculo de 28x28 para cada nivel del mapa: anillo con brillo y centro oscuro."""
+    img = Image.new("RGBA", (28, 28), (0, 0, 0, 0))
+    c = 13.5
+    for y in range(28):
+        for x in range(28):
+            d = ((x - c) ** 2 + (y - c) ** 2) ** 0.5
+            if d <= 13.5:
+                if d > 12.2:
+                    col = OUTLINE[:3]
+                elif d > 9.2:
+                    col = anillo_claro if (x + y) < 27 else anillo_oscuro
+                elif d > 8.2:
+                    col = OUTLINE[:3]
+                else:
+                    col = (38, 44, 62)
+                img.putpixel((x, y), col + (255,))
+    return img
+
+
+def generar_mapa():
+    # map.png: estrella 16 llena (0,0) y vacía (16,0); estrella 8 llena (32,0) y vacía (40,0);
+    # candado 16 (48,0); insignia 28 dorada (0,16) y gris (28,16)
+    hoja = Image.new("RGBA", (64, 48), (0, 0, 0, 0))
+    gris = dict(PALETA)
+    gris["Y"] = (84, 88, 110, 255)
+    gris["y"] = (60, 62, 84, 255)
+    gris["W"] = (110, 114, 136, 255)
+    hoja.paste(dibujo_ascii(ESTRELLA, PALETA), (0, 0))
+    hoja.paste(dibujo_ascii(ESTRELLA, gris), (16, 0))
+    hoja.paste(dibujo_ascii(ESTRELLA_PEQUENA, PALETA, size=8), (32, 0))
+    hoja.paste(dibujo_ascii(ESTRELLA_PEQUENA, gris, size=8), (40, 0))
+    hoja.paste(dibujo_ascii(CANDADO, PALETA), (48, 0))
+    hoja.paste(insignia((250, 204, 64), (196, 134, 34)), (0, 16))
+    hoja.paste(insignia((150, 152, 170), (100, 102, 122)), (28, 16))
+    hoja.save(os.path.join(ASSETS, "map.png"))
+
+
 def generar_fuente():
     """Fuente bitmap (AngelCode .fnt) a partir de la fuente por defecto de PIL."""
     font = ImageFont.load_default()
@@ -724,6 +800,7 @@ if __name__ == "__main__":
     generar_botones()
     generar_iconos()
     generar_objetos()
+    generar_mapa()
     generar_fuente()
     generar_icono()
     print("Sprites generados en", ASSETS)

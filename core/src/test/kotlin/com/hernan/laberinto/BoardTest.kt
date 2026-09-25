@@ -48,18 +48,18 @@ class BoardTest {
         val s = GameState(1, 3, Random(3))
         s.push(Insert(Side.TOP, 2))
         assertFalse(Insert(Side.BOTTOM, 2) in s.allowedInserts())
-        assertEquals(Insert.ALL.size - 1, s.allowedInserts().size)
+        assertEquals(s.board.config.inserts.size - 1, s.allowedInserts().size)
     }
 
     @Test
     fun lasPiezasFijasNoSeMueven() {
         val b = Board.generate(Random(8))
-        val fixed = b.allCells().filter { Board.isFixed(it.r, it.c) }
+        val fixed = b.allCells().filter { b.config.isFixed(it.r, it.c) }
         assertEquals(9, fixed.size)
         val before = fixed.associateWith { b[it] }
-        for (ins in Insert.ALL) b.push(ins, mutableListOf())
+        for (ins in b.config.inserts) b.push(ins, mutableListOf())
         for ((pos, tile) in before) assertTrue(b[pos] === tile, "La pieza fija de $pos se ha movido")
-        assertEquals(16, Insert.ALL.size)
+        assertEquals(16, b.config.inserts.size)
     }
 
     @Test

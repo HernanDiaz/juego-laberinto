@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.hernan.laberinto.model.Level
+import com.hernan.laberinto.model.Levels
 import com.hernan.laberinto.screens.MenuScreen
 
 open class LaberintoGame : Game() {
@@ -18,6 +20,10 @@ open class LaberintoGame : Game() {
         private set
     lateinit var strings: Strings
         private set
+    lateinit var levels: List<Level>
+        private set
+    lateinit var progress: Progress
+        private set
 
     override fun create() {
         Gdx.input.setCatchKey(Input.Keys.BACK, true)
@@ -26,6 +32,8 @@ open class LaberintoGame : Game() {
         ui = Ui(assets, batch)
         audio = Audio()
         strings = Strings()
+        levels = Levels.parse(Gdx.files.internal("levels.json").readString("UTF-8"))
+        progress = Progress(levels.size)
         strings.onChange = { ui.useFont(assets.font(strings.fontFile)) }
         ui.useFont(assets.font(strings.fontFile))
         audio.startMusic()

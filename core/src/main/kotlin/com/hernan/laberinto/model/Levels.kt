@@ -16,8 +16,6 @@ data class Level(
     val roundsFor2: Int,
     /** Para 3 estrellas: además, terminar con al menos estas monedas. */
     val coinsFor3: Int,
-    /** Solo con el juego completo (compra única). */
-    val premium: Boolean = false,
     /** Muestra pistas (flecha y casilla recomendadas) para aprender a jugar. */
     val hints: Boolean = false,
 ) {
@@ -62,7 +60,6 @@ object Levels {
         val stars = v.get("stars")
         return Level(
             index, v.getInt("icon"), setup, stars.getInt("rounds"), stars.getInt("coins"),
-            premium = v.getBoolean("premium", false),
             hints = v.getBoolean("hints", false),
         )
     }

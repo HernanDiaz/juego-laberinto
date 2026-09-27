@@ -85,9 +85,6 @@ class Strings {
         return out.toString()
     }
 
-    /** Texto que no viene de los archivos de idioma (p. ej. el precio), preparado para la fuente. */
-    fun display(text: String) = shape(text)
-
     operator fun get(key: String): String = shape(bundle.get(key))
     fun format(key: String, vararg args: Any): String = shape(bundle.format(key, *args))
 

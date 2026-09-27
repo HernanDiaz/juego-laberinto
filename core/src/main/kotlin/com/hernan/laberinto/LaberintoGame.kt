@@ -9,11 +9,7 @@ import com.hernan.laberinto.model.Level
 import com.hernan.laberinto.model.Levels
 import com.hernan.laberinto.screens.MenuScreen
 
-/**
- * [storeFactory] crea la tienda de la plataforma (Google Play en Android, simulada en escritorio).
- * Se crea en create() porque necesita libGDX ya iniciado.
- */
-open class LaberintoGame(private val storeFactory: () -> Store = { FakeStore() }) : Game() {
+open class LaberintoGame : Game() {
     lateinit var assets: Assets
         private set
     lateinit var batch: SpriteBatch
@@ -28,18 +24,6 @@ open class LaberintoGame(private val storeFactory: () -> Store = { FakeStore() }
         private set
     lateinit var progress: Progress
         private set
-    lateinit var store: Store
-        private set
-
-    /** Precio del juego completo listo para dibujar con la fuente del idioma actual, o null. */
-    fun priceLabel(): String? {
-        val p = store.price ?: return null
-        val shaped = strings.display(p)
-        return if (ui.canRender(shaped)) shaped else store.priceFallback
-    }
-
-    /** Los niveles marcados como de pago solo se juegan con el juego completo. */
-    fun canPlay(level: Level) = !level.premium || store.owned
 
     override fun create() {
         Gdx.input.setCatchKey(Input.Keys.BACK, true)
@@ -50,7 +34,6 @@ open class LaberintoGame(private val storeFactory: () -> Store = { FakeStore() }
         strings = Strings()
         levels = Levels.parse(Gdx.files.internal("levels.json").readString("UTF-8"))
         progress = Progress(levels.size)
-        store = storeFactory()
         strings.onChange = { ui.useFont(assets.font(strings.fontFile)) }
         ui.useFont(assets.font(strings.fontFile))
         audio.startMusic()
@@ -76,13 +59,7 @@ open class LaberintoGame(private val storeFactory: () -> Store = { FakeStore() }
         old?.dispose()
     }
 
-    override fun resume() {
-        super.resume()
-        store.refresh()
-    }
-
     override fun dispose() {
-        store.dispose()
         screen?.dispose()
         batch.dispose()
         assets.dispose()

@@ -47,24 +47,12 @@ Respuestas sugeridas; revísalas antes de enviarlas.
 | Política de privacidad | URL pública de `store/privacidad.html` (sustituye antes `CORREO_DE_CONTACTO`) |
 | Anuncios | No contiene anuncios |
 | Acceso a la app | Todas las funciones están disponibles sin acceso especial |
-| Clasificación de contenido | Cuestionario IARC: sin violencia, sin sexo, sin lenguaje malsonante, sin drogas; los sucesos "lotería" y "herencia" son premios del juego, **no** hay apuestas con dinero real. Sí hay compras dentro de la app. |
+| Clasificación de contenido | Cuestionario IARC: sin violencia, sin sexo, sin lenguaje malsonante, sin drogas; los sucesos "lotería" y "herencia" son premios del juego, **no** hay apuestas con dinero real. No hay compras dentro de la app. |
 | Público objetivo | Recomendado: 13 años o más (elegir menores de 13 activa los requisitos del programa "Familias") |
-| Seguridad de los datos | La app no recoge ni comparte datos. La compra la procesa Google Play Billing; revisa la guía de Google por si pide declarar el historial de compras |
+| Seguridad de los datos | La app no recoge ni comparte datos |
 | Apps de noticias / salud / finanzas / gobierno | No |
 
-## 5. Producto de compra (juego completo)
-
-Monetizar › Productos › Productos de compra única:
-- **ID del producto: `juego_completo`** (tiene que ser exactamente este, lo usa el código)
-- Nombre: "Juego completo" · Descripción: "Niveles 4 a 8 y partida libre con hasta 3 rivales"
-- Precio: 0,99 € (Google calcula el de cada país)
-- Activarlo
-
-Para cobrar hace falta el **perfil de pagos** (datos bancarios y fiscales) en Play Console.
-
-Para probar la compra sin pagar: Configuración › **Pruebas de licencias** › añade tu cuenta de Gmail.
-
-## 6. Prueba cerrada y producción
+## 5. Prueba cerrada y producción
 
 - Pruebas › **Prueba cerrada** › crea una pista, sube el `.aab` y añade a los testers
   (lo más cómodo: un Grupo de Google con sus correos). Comparte con ellos el enlace de participación.

@@ -112,10 +112,7 @@ class GameScreen(
         if (level != null) {
             val next = nextLevel
             if (won && next != null) {
-                overButtons.add(a.greenButton, 1f, { str["over.next"] }) {
-                    // Si el siguiente es del juego completo y no lo tiene, se ofrece la compra en el mapa
-                    game.switchTo(if (game.canPlay(next)) GameScreen(game, next.setup, next) else LevelMapScreen(game, openUpgrade = true))
-                }
+                overButtons.add(a.greenButton, 1f, { str["over.next"] }) { game.switchTo(GameScreen(game, next.setup, next)) }
                 overButtons.add(a.slateButton, 1f, { str["over.retry"] }) { restart() }
             } else {
                 overButtons.add(if (won) a.slateButton else a.greenButton, 1f, { str["over.retry"] }) { restart() }

@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId 'com.hernandiaz.vueltasdelavida'
-        minSdk 23
+        minSdk 21
         targetSdk 36
         versionCode 1
         versionName '1.0'
@@ -66,7 +66,6 @@ configurations { natives }
 dependencies {
     implementation project(':core')
     implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
-    implementation "com.android.billingclient:billing:8.3.0"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"

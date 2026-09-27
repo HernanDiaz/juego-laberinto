@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.PixmapIO
-import com.hernan.laberinto.FakeStore
 import com.hernan.laberinto.LaberintoGame
 import com.hernan.laberinto.screens.GameScreen
 import java.util.zip.Deflater
@@ -21,7 +20,6 @@ import java.util.zip.Deflater
  *   debug:swap    fuerza una mudanza (en la pantalla de partida)
  *   debug:win     el jugador gana al instante
  *   debug:resetprogress  borra las estrellas guardadas
- *   debug:premium / debug:nopremium  da o quita el juego completo (tienda simulada)
  *   shot:NOMBRE   guarda <outDir>/NOMBRE.png
  */
 class TourGame(private val outDir: String, script: String) : LaberintoGame() {
@@ -60,8 +58,6 @@ class TourGame(private val outDir: String, script: String) : LaberintoGame() {
                 "swap" -> (screen as? GameScreen)?.debugSwap()
                 "win" -> (screen as? GameScreen)?.debugWin()
                 "resetprogress" -> progress.reset()
-                "premium" -> (store as? FakeStore)?.setOwned(true)
-                "nopremium" -> (store as? FakeStore)?.setOwned(false)
             }
             "shot" -> {
                 val w = Gdx.graphics.backBufferWidth

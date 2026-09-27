@@ -53,9 +53,7 @@ Pasos: `wait:N`, `tap:X,Y`, `key:BACK`, `lang:xx`, `shot:nombre` (ver `TourGame.
 Requiere JDK 17+ (el de Android Studio sirve: `D:\AndroidStudio\jbr`).
 
 ## Publicación en Google Play
-- Juego gratis con compra única `juego_completo` (niveles con `"premium": true` en `levels.json`
-  y partida libre con más de 1 rival). En Android la gestiona `PlayStore` (Google Play Billing);
-  en escritorio, `FakeStore` (compra simulada).
+- Juego totalmente gratuito: sin anuncios ni compras dentro de la app.
 - `gradlew android:bundleRelease` genera el `.aab`; la firma se lee de `keystore.properties`
   (plantilla en `keystore.properties.example`, nunca se sube a git).
 - Material de la ficha en `store/` (textos en 11 idiomas, icono, imagen destacada, capturas,

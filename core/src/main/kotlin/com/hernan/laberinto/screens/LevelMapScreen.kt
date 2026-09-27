@@ -23,7 +23,7 @@ import kotlin.math.sin
  * Mapa de niveles: un camino vertical (de la juventud, abajo, a la jubilación, arriba) con una
  * parada por nivel. Se desplaza arrastrando. Al tocar un nivel abierto se muestra su ficha.
  */
-class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = false) : ScreenAdapter() {
+class LevelMapScreen(private val game: LaberintoGame) : ScreenAdapter() {
     private val a = game.assets
     private val ui = game.ui
     private val batch = game.batch
@@ -58,9 +58,6 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
 
     private val touch = Vector2()
 
-    /** Ventana de compra del juego completo. */
-    private val upgrade = UpgradePanel(game).also { if (openUpgrade) it.open() }
-
     private fun nodeX(i: Int, w: Float) = floor(w / 2 + if (i % 2 == 0) -55f else 55f)
     private fun nodeY(i: Int) = BOTTOM + i * SPACING
     private val contentHeight get() = nodeY(levels.size - 1) + 70f
@@ -72,7 +69,6 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
     private val input = object : InputAdapter() {
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))
-            if (upgrade.down(touch.x, touch.y)) return true
             if (selected >= 0) {
                 panelButtons.down(touch.x, touch.y)
                 return true
@@ -86,10 +82,6 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
 
         override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))
-            if (upgrade.visible) {
-                upgrade.drag(touch.x, touch.y)
-                return true
-            }
             if (selected >= 0) {
                 panelButtons.drag(touch.x, touch.y)
                 return true
@@ -105,7 +97,6 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
 
         override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))
-            if (upgrade.up(touch.x, touch.y)) return true
             if (selected >= 0) {
                 panelButtons.up(touch.x, touch.y)
                 return true
@@ -122,11 +113,7 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
 
         override fun keyDown(keycode: Int): Boolean {
             when (keycode) {
-                Input.Keys.BACK, Input.Keys.ESCAPE -> when {
-                    upgrade.visible -> upgrade.close()
-                    selected >= 0 -> selected = -1
-                    else -> game.switchTo(MenuScreen(game))
-                }
+                Input.Keys.BACK, Input.Keys.ESCAPE -> if (selected >= 0) selected = -1 else game.switchTo(MenuScreen(game))
             }
             return true
         }
@@ -138,11 +125,7 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
             val nx = nodeX(i, w)
             val ny = nodeY(i) + visibleBottom() - scroll
             if (hypot(x - nx, y - ny) <= 20f) {
-                if (!game.canPlay(levels[i])) {
-                    // Nivel del juego completo: se ofrece la compra
-                    game.audio.play(game.audio.click)
-                    upgrade.open()
-                } else if (progress.unlocked(i)) {
+                if (progress.unlocked(i)) {
                     game.audio.play(game.audio.click)
                     selected = i
                 } else {
@@ -206,18 +189,13 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
             val x = nodeX(i, w)
             val y = nodeY(i) + base
             if (y < -40 || y > h + 40) continue
-            val paid = !game.canPlay(levels[i])
-            val open = progress.unlocked(i) && !paid
+            val open = progress.unlocked(i)
             batch.draw(if (open) a.nodeOpen else a.nodeLocked, x - 14, y - 14)
             if (open) batch.draw(a.treasures[levels[i].icon], x - 8, y - 8) else batch.draw(a.lock, x - 8, y - 8)
-            if (paid) {
-                // Nivel del juego completo: precio en lugar de estrellas
-                ui.textCentered(game.priceLabel() ?: s["shop.title"], x, y - 21, Ui.GOLD)
-            } else {
-                val stars = progress.stars(i)
-                for (k in 0 until 3) {
-                    batch.draw(if (k < stars) a.smallStar else a.smallStarEmpty, x - 14 + k * 10f, y - 25)
-                }
+            // Estrellas conseguidas
+            val stars = progress.stars(i)
+            for (k in 0 until 3) {
+                batch.draw(if (k < stars) a.smallStar else a.smallStarEmpty, x - 14 + k * 10f, y - 25)
             }
             ui.textCentered("${i + 1}. ${s["level.$i.name"]}", x, y - 36, if (open) Color.WHITE else Ui.MUTED)
             // La ficha del jugador espera en el nivel que toca
@@ -240,7 +218,6 @@ class LevelMapScreen(private val game: LaberintoGame, openUpgrade: Boolean = fal
             ui.textCentered(toast, w / 2, h / 2, Color.WHITE)
         }
         if (selected >= 0) drawPanel(w, h)
-        upgrade.draw(batch, w, h, delta)
         batch.end()
     }
 

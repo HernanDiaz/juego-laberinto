@@ -25,11 +25,6 @@ class LevelsTest {
     }
 
     @Test
-    fun losTresPrimerosNivelesSonGratis() {
-        assertEquals(listOf(false, false, false, true, true, true, true, true), levels.map { it.premium })
-    }
-
-    @Test
     fun estrellas() {
         val l = levels[0]
         assertEquals(1, l.stars(l.roundsFor2 + 1, 99))

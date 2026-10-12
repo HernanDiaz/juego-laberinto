@@ -143,7 +143,38 @@ class Board(private val grid: Array<Array<Tile>>, var spare: Tile, val config: B
     fun reachable(from: Pos): Set<Pos> = bfs(from).keys
 
     /** Camino más corto de [from] a [to], ambos incluidos, o null si no están conectados. */
-    fun path(from: Pos, to: Pos): List<Pos>? = pathIn(bfs(from), to)
+    /**
+     * Camino más corto de [from] a [to] (ambos incluidos), o null si no están conectados.
+     * Si hay varios igual de cortos, elige el que pasa por más monedas: es lo que espera
+     * el jugador al ver monedas por el camino.
+     */
+    fun path(from: Pos, to: Pos): List<Pos>? {
+        val tree = bfs(from)
+        if (to !in tree) return null
+        // Distancias desde el origen (el orden del BFS ya es por distancia creciente)
+        val dist = HashMap<Pos, Int>()
+        for ((p, prev) in tree) dist[p] = if (prev == null) 0 else dist.getValue(prev) + 1
+        val coins = HashMap<Pos, Int>()
+        val parent = HashMap<Pos, Pos?>()
+        for (p in tree.keys) {
+            val own = if (p != from && this[p].item == Item.COIN) 1 else 0
+            if (p == from) {
+                coins[p] = 0
+                parent[p] = null
+                continue
+            }
+            var best: Pos? = null
+            for (d in Dirs.ALL) {
+                if (!connected(p, d)) continue
+                val q = Pos(p.r + Dirs.dr(d), p.c + Dirs.dc(d))
+                if (dist[q] != dist.getValue(p) - 1) continue
+                if (best == null || coins.getValue(q) > coins.getValue(best)) best = q
+            }
+            parent[p] = best
+            coins[p] = coins.getValue(best!!) + own
+        }
+        return pathIn(parent, to)
+    }
 
     /** Casillas vacías (sin meta ni objeto) donde puede aparecer una moneda nueva. */
     fun emptyCells(): List<Pos> = allCells().filter { p ->

@@ -55,6 +55,8 @@ class Player(val index: Int, val isAi: Boolean, val home: Pos, val personality: 
 /** Configuración de una partida: la de un nivel o la de la partida libre. */
 data class GameSetup(
     val numAi: Int = 1,
+    /** Jugadores humanos: ocupan los primeros puestos (0, 1...). Los rivales IA van detrás. */
+    val humans: Int = 1,
     val goalsPerStage: Int = 2,
     /** Personalidad de cada rival; null = al azar. */
     val personalities: List<Personality>? = null,
@@ -102,14 +104,16 @@ class GameState(val setup: GameSetup, val rng: Random = Random.Default) {
 
     init {
         val numAi = setup.numAi
+        val humans = setup.humans
         val goalsPerStage = setup.goalsPerStage
-        require(numAi in 1..3)
-        val count = numAi + 1
-        require(goalsPerStage in 1..maxGoalsPerStage(numAi))
+        val count = humans + numAi
+        require(humans >= 1 && numAi >= 0 && count in 2..4) { "De 2 a 4 jugadores, al menos uno humano" }
+        require(goalsPerStage in 1..maxGoalsFor(count))
         val personalities = setup.personalities ?: Personality.entries.shuffled(rng)
         require(personalities.size >= numAi) { "Faltan personalidades para los rivales" }
         players = (0 until count).map { i ->
-            Player(i, isAi = i != 0, home = HOMES[i], personality = if (i == 0) null else personalities[i - 1])
+            val ai = i >= humans
+            Player(i, isAi = ai, home = HOMES[i], personality = if (ai) personalities[i - humans] else null)
         }
         players.forEach { it.coins = setup.startCoins }
         for (s in 0 until Goals.STAGES) {
@@ -232,7 +236,11 @@ class GameState(val setup: GameSetup, val rng: Random = Random.Default) {
     companion object {
         val HOMES = listOf(Pos(6, 0), Pos(0, 6), Pos(0, 0), Pos(6, 6))
 
-        fun maxGoalsPerStage(numAi: Int) = Goals.PER_STAGE / (numAi + 1)
+        /** Máximo de metas por etapa con un humano y [numAi] rivales. */
+        fun maxGoalsPerStage(numAi: Int) = maxGoalsFor(numAi + 1)
+
+        /** Máximo de metas por etapa con [players] jugadores en total. */
+        fun maxGoalsFor(players: Int) = Goals.PER_STAGE / players
 
         fun goalsOf(p: Player, board: Board): List<Pos> =
             if (p.retiring) listOf(p.home) else p.activeGoals.mapNotNull { board.find(it) }

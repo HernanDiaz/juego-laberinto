@@ -5,7 +5,10 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.PixmapIO
 import com.hernan.laberinto.LaberintoGame
+import com.hernan.laberinto.model.GameSetup
 import com.hernan.laberinto.screens.GameScreen
+import com.hernan.laberinto.screens.PlayMode
+import com.hernan.laberinto.screens.WifiScreen
 import java.util.zip.Deflater
 
 /**
@@ -20,6 +23,9 @@ import java.util.zip.Deflater
  *   debug:swap    fuerza una mudanza (en la pantalla de partida)
  *   debug:win     el jugador gana al instante
  *   debug:resetprogress  borra las estrellas guardadas
+ *   debug:wifi / debug:host / debug:join:IP / debug:start   sala de Wi-Fi
+ *   debug:autoplay  los turnos de este móvil se juegan solos;  debug:dump  imprime el estado
+ *   debug:hotseat   partida de 2 personas + 1 IA en el mismo móvil
  *   shot:NOMBRE   guarda <outDir>/NOMBRE.png
  */
 class TourGame(private val outDir: String, script: String) : LaberintoGame() {
@@ -58,6 +64,16 @@ class TourGame(private val outDir: String, script: String) : LaberintoGame() {
                 "swap" -> (screen as? GameScreen)?.debugSwap()
                 "win" -> (screen as? GameScreen)?.debugWin()
                 "resetprogress" -> progress.reset()
+                // Multijugador
+                "wifi" -> switchTo(WifiScreen(this))
+                "host" -> (screen as? WifiScreen)?.debugHost()
+                "start" -> (screen as? WifiScreen)?.debugStart()
+                "autoplay" -> (screen as? GameScreen)?.debugAutoPlay = true
+                "dump" -> println("ESTADO " + ((screen as? GameScreen)?.debugDump() ?: "sin partida"))
+                "hotseat" -> switchTo(
+                    GameScreen(this, GameSetup(humans = 2, numAi = 1, goalsPerStage = 2, aiSkill = 0.5), mode = PlayMode.HotSeat),
+                )
+                else -> if (arg.startsWith("join:")) (screen as? WifiScreen)?.debugJoin(arg.removePrefix("join:"))
             }
             "shot" -> {
                 val w = Gdx.graphics.backBufferWidth

@@ -30,23 +30,61 @@ import com.hernan.laberinto.model.Player
 import com.hernan.laberinto.model.Pos
 import com.hernan.laberinto.model.Side
 import com.hernan.laberinto.model.Tile
+import com.hernan.laberinto.net.HostSession
+import com.hernan.laberinto.net.NetEvent
+import kotlin.random.Random
 import kotlin.math.floor
 import kotlin.math.sin
 
-/** Partida. Con [level] es un nivel del mapa (cuenta estrellas); sin él, una partida libre. */
+/**
+ * Partida. Con [level] es un nivel del mapa (cuenta estrellas); sin él, una partida libre.
+ * [mode] dice si se juega solo, pasándose el móvil o por Wi-Fi.
+ */
 class GameScreen(
     private val game: LaberintoGame,
     private val setup: GameSetup,
     private val level: Level? = null,
+    private val mode: PlayMode = PlayMode.Solo,
 ) : ScreenAdapter() {
     private val a = game.assets
     private val ui = game.ui
     private val batch = game.batch
     private val viewport = ExtendViewport(MenuScreen.WORLD_W, MenuScreen.WORLD_H)
 
-    private val state = GameState(setup)
+    private val online = mode as? PlayMode.Online
+    private val hotSeat = mode is PlayMode.HotSeat
+
+    // Por Wi-Fi todos los móviles usan la misma semilla: la partida es determinista
+    private val state = GameState(setup, online?.let { Random(it.seed) } ?: Random.Default)
     private val board get() = state.board
-    private val human = state.players[0]
+
+    /** Puestos que se juegan desde este móvil. */
+    private val localSlots: Set<Int> = online?.let { setOf(it.localSlot) } ?: (0 until setup.humans).toSet()
+
+    /** Jugador cuyas metas se muestran (pasándose el móvil: el último humano que ha jugado). */
+    private var viewerSlot = online?.localSlot ?: 0
+    private val human get() = state.players[viewerSlot]
+
+    /** ¿Es "yo"? (para decir "¡Has ganado!" en vez de "Gana Azul"). Pasándose el móvil, nadie lo es. */
+    private fun isMe(p: Player) = !hotSeat && p.index == viewerSlot
+
+    /** Nombre de un jugador: "Tú" para uno mismo y el color para los demás. */
+    private fun nameOf(i: Int): String = when {
+        mode is PlayMode.Solo -> str.player(i)
+        online != null && i == online.localSlot -> str.player(0)
+        i == 0 -> str["color.0"]
+        else -> str.player(i)
+    }
+
+    /** La IA usa su propio azar: así no altera el de la partida (que debe ser igual en todos los móviles). */
+    private val aiRng = Random(System.nanoTime())
+
+    // Jugada del turno local (para enviarla por Wi-Fi)
+    private var turnRotations = 0
+    private var turnInsert: Insert? = null
+    private var moveSeq = 0
+    private val remoteMoves = ArrayDeque<Pair<Int, AiPlan>>()
+    private var leaveTimer = -1f
 
     // Pistas (niveles de aprendizaje): la jugada que haría una IA experta
     private val hints = level?.hints == true
@@ -58,7 +96,7 @@ class GameScreen(
     private val audio = game.audio
     private val str = game.strings
 
-    private enum class Phase { PLACE, SLIDE, MOVE, WALK, SWAP, AI_THINK, AI_ROTATE, OVER }
+    private enum class Phase { HANDOFF, PLACE, SLIDE, MOVE, WALK, SWAP, AI_THINK, AI_ROTATE, REMOTE, OVER }
 
     private var phase = Phase.PLACE
     private var timer = 0f
@@ -71,7 +109,8 @@ class GameScreen(
     private var status = ""
     private var toast = ""
     private var toastTime = 0f
-    private val pendingToasts = ArrayDeque<String>()
+    /** Avisos en espera, con el momento en que se generaron. */
+    private val pendingToasts = ArrayDeque<Pair<String, Float>>()
 
     // Disposición (en unidades de mundo, recalculada en resize)
     private var boardX = 0f
@@ -94,7 +133,7 @@ class GameScreen(
     private val pauseButtons = Buttons(ui, audio).apply {
         add(a.greenButton, 1f, { str["pause.resume"] }) { paused = false }
         add(a.slateButton, 1f, { str["menu.howto"] }) { game.overlay(InstructionsScreen(game, this@GameScreen)) }
-        add(a.slateButton, 1f, { str[if (level != null) "over.map" else "pause.menu"] }) { leave() }
+        add(a.slateButton, 1f, { str[if (level != null) "over.map" else if (online != null) "mp.leave" else "pause.menu"] }) { leave() }
     }
 
     // Final de partida: estrellas conseguidas y botones
@@ -102,14 +141,19 @@ class GameScreen(
     private val overButtons = Buttons(ui, audio)
     private val nextLevel: Level? get() = level?.let { game.levels.getOrNull(it.index + 1) }
 
-    private fun restart() = game.switchTo(GameScreen(game, setup, level))
+    private fun restart() = game.switchTo(GameScreen(game, setup, level, mode))
 
-    /** Vuelve al mapa (niveles) o al menú (partida libre). */
-    private fun leave() = game.switchTo(if (level != null) LevelMapScreen(game) else MenuScreen(game))
+    /** Vuelve al mapa (niveles) o al menú (partida libre y multijugador). */
+    private fun leave() {
+        online?.session?.close()
+        game.switchTo(if (level != null) LevelMapScreen(game) else MenuScreen(game))
+    }
 
     private fun buildOverButtons() {
-        val won = state.winner === human
-        if (level != null) {
+        val won = state.winner?.let { isMe(it) } == true
+        if (online != null) {
+            overButtons.add(a.greenButton, 1f, { str["pause.menu"] }) { leave() }
+        } else if (level != null) {
             val next = nextLevel
             if (won && next != null) {
                 overButtons.add(a.greenButton, 1f, { str["over.next"] }) { game.switchTo(GameScreen(game, next.setup, next)) }
@@ -151,7 +195,7 @@ class GameScreen(
         override fun keyDown(keycode: Int): Boolean {
             when (keycode) {
                 Input.Keys.BACK, Input.Keys.ESCAPE ->
-                    if (phase == Phase.OVER) {
+                    if (phase == Phase.OVER || leaveTimer >= 0) {
                         leave()
                     } else {
                         paused = !paused
@@ -163,9 +207,13 @@ class GameScreen(
         }
     }
 
-    /** La app pasa a segundo plano: pausamos la partida. */
+    /** La app pasa a segundo plano: pausamos la partida (por Wi-Fi sigue corriendo). */
     override fun pause() {
-        if (phase != Phase.OVER) paused = true
+        if (phase != Phase.OVER && online == null) paused = true
+    }
+
+    override fun dispose() {
+        online?.session?.close()
     }
 
     init {
@@ -192,10 +240,31 @@ class GameScreen(
     private fun startTurn() {
         timer = 0f
         val p = state.currentPlayer
-        if (p.isAi) {
-            phase = Phase.AI_THINK
-            status = str.format("game.turnAi", str.player(p.index), str["ai.${p.personality!!.name}"])
-        } else {
+        when {
+            p.isAi -> {
+                phase = Phase.AI_THINK
+                status = str.format("game.turnAi", nameOf(p.index), str["ai.${p.personality!!.name}"])
+            }
+            p.index !in localSlots -> {
+                // Turno de otro móvil: se espera su jugada
+                phase = Phase.REMOTE
+                status = str.format("mp.waitTurn", nameOf(p.index))
+            }
+            hotSeat && setup.humans > 1 -> {
+                // Se tapa el tablero hasta que el siguiente coja el móvil (las metas son secretas)
+                viewerSlot = p.index
+                phase = Phase.HANDOFF
+                status = ""
+            }
+            else -> beginPlace()
+        }
+    }
+
+    private fun beginPlace() {
+        timer = 0f
+        turnRotations = 0
+        turnInsert = null
+        run {
             phase = Phase.PLACE
             status = str["game.place"]
             if (hints) {
@@ -210,11 +279,13 @@ class GameScreen(
 
     private fun rotateSpare() {
         board.spare.rotateCw()
+        turnRotations++
         audio.play(audio.rotate)
     }
 
     private fun beginSlide(ins: Insert) {
         audio.play(audio.push, 0.8f)
+        turnInsert = ins
         slide = ins
         phase = Phase.SLIDE
         timer = 0f
@@ -224,7 +295,8 @@ class GameScreen(
         val p = state.currentPlayer
         reach = board.reachable(p.pos)
         slide = null
-        if (p.isAi) {
+        if (p.isAi || p.index !in localSlots) {
+            // IA o jugador de otro móvil: su ficha camina sola hasta el destino elegido
             beginWalk(aiPlan!!.dest)
         } else {
             phase = Phase.MOVE
@@ -238,6 +310,13 @@ class GameScreen(
     }
 
     private fun beginWalk(dest: Pos) {
+        val p = state.currentPlayer
+        // Por Wi-Fi, la jugada de este móvil se envía a los demás
+        val net = online
+        if (net != null && p.index == net.localSlot) {
+            val ins = turnInsert!!
+            net.session.send("MOVE|${moveSeq++}|${p.index}|${turnRotations % 4}|${ins.side.name}|${ins.index}|${dest.r}|${dest.c}")
+        }
         walkPath = board.path(state.currentPlayer.pos, dest) ?: listOf(state.currentPlayer.pos)
         phase = Phase.WALK
         timer = 0f
@@ -252,17 +331,18 @@ class GameScreen(
         pickedThisWalk.clear()
         if (r.goal >= 0) {
             showToast(
-                if (p === human) str.format("game.youFound", str.treasure(r.goal))
-                else str.format("game.found", str.player(p.index), str.treasure(r.goal)),
+                if (isMe(p)) str.format("game.youFound", str.treasure(r.goal))
+                else str.format("game.found", nameOf(p.index), str.treasure(r.goal)),
             )
-            audio.play(if (p === human) audio.treasure else audio.rival)
-            if (r.reward > 0 && p === human) showToast(str.format("game.reward", r.reward))
-            if (p === human && p.stage != stageBefore) {
+            audio.play(if (isMe(p) || (hotSeat && !p.isAi)) audio.treasure else audio.rival)
+            if (r.reward > 0 && p.index in localSlots) showToast(str.format("game.reward", r.reward))
+            if (p.index in localSlots && p.stage != stageBefore) {
                 showToast(if (p.retiring) str["game.goHome"] else str.format("game.newStage", str.stage(p.stage)))
             }
         }
-        if (r.blockedGoal >= 0 && p === human) {
-            showToast(str.format("game.needCoins", r.missingCoins, str.treasure(r.blockedGoal)))
+        if (r.blockedGoal >= 0 && p.index in localSlots) {
+            // Se muestra ya: si esperase en la cola podría salir más tarde y confundir
+            showToastNow(str.format("game.needCoins", r.missingCoins, str.treasure(r.blockedGoal)))
             audio.play(audio.denied)
         }
         r.event?.let { e ->
@@ -270,7 +350,7 @@ class GameScreen(
             if (e == EventType.SWAP) {
                 // Se avisa al momento (sin esperar a otros avisos) y se anima el cambio de sitio
                 val other = r.swappedWith!!
-                showToastNow(str.format("event.SWAP", str.player(p.index), str.player(other.index)))
+                showToastNow(str.format("event.SWAP", nameOf(p.index), nameOf(other.index)))
                 swapA = p
                 swapB = other
                 swapFromA = walkPath.last()
@@ -279,9 +359,34 @@ class GameScreen(
                 timer = 0f
                 return
             }
-            showToast(str.format("event.${e.name}", str.player(p.index), kotlin.math.abs(r.eventCoins)))
+            showToast(str.format("event.${e.name}", nameOf(p.index), kotlin.math.abs(r.eventCoins)))
         }
         endTurn()
+    }
+
+    /** Solo para el modo tour de escritorio: los turnos de este móvil se juegan solos. */
+    var debugAutoPlay = false
+    private var autoDest: Pos? = null
+
+    /** Solo para el modo tour: resumen del estado, para comparar dos móviles en red. */
+    fun debugDump(): String =
+        "ronda=${state.round} turno=${state.current} ganador=${state.winner?.index} " +
+            state.players.joinToString(" ") { "[${it.index}:${it.pos.r},${it.pos.c} m=${it.coins} c=${it.collected}]" } +
+            " monedas=" + board.allCells().filter { board[it].item == Item.COIN }.joinToString(",") { "${it.r}${it.c}" }
+
+    private fun autoPlayStep() {
+        if (!debugAutoPlay || state.currentPlayer.index !in localSlots) return
+        when (phase) {
+            Phase.HANDOFF -> beginPlace()
+            Phase.PLACE -> if (timer > 0.3f) {
+                val plan = Ai.plan(state, aiRng, 0.6)
+                repeat(plan.rotations) { rotateSpare() }
+                autoDest = plan.dest
+                beginSlide(plan.insert)
+            }
+            Phase.MOVE -> if (timer > 0.2f) beginWalk(autoDest ?: state.currentPlayer.pos)
+            else -> {}
+        }
     }
 
     /** Solo para el modo tour de escritorio: fuerza una mudanza entre el jugador y el primer rival. */
@@ -316,9 +421,9 @@ class GameScreen(
         if (winner != null) {
             phase = Phase.OVER
             timer = 0f
-            audio.play(if (winner === human) audio.win else audio.lose)
+            audio.play(if (isMe(winner) || (hotSeat && !winner.isAi)) audio.win else audio.lose)
             status = ""
-            if (level != null && winner === human) {
+            if (level != null && isMe(winner)) {
                 starsWon = level.stars(state.round, human.coins)
                 game.progress.record(level.index, starsWon)
             }
@@ -339,7 +444,7 @@ class GameScreen(
     /** Los avisos se muestran de uno en uno, en orden. */
     private fun showToast(msg: String) {
         if (toastTime > 0) {
-            pendingToasts.addLast(msg)
+            pendingToasts.addLast(msg to time)
             return
         }
         toast = msg
@@ -348,19 +453,78 @@ class GameScreen(
 
     // ------------------------------------------------------------------ lógica
 
+    /** Mensajes de la red (en el hilo del juego). */
+    private fun pollNet() {
+        val net = online ?: return
+        while (true) {
+            when (val e = net.session.events.poll() ?: break) {
+                is NetEvent.Message -> {
+                    val f = e.text.split('|')
+                    when (f[0]) {
+                        "MOVE" -> {
+                            // El anfitrión reenvía la jugada de un invitado a los demás
+                            (net.session as? HostSession)?.relay(e.from, e.text)
+                            val player = f[2].toInt()
+                            val ins = Insert(Side.valueOf(f[4]), f[5].toInt())
+                            remoteMoves.addLast(player to AiPlan(f[3].toInt(), ins, Pos(f[6].toInt(), f[7].toInt())))
+                        }
+                        "LEFT" -> connectionLost("mp.playerLeft")
+                    }
+                }
+                is NetEvent.Left -> {
+                    (net.session as? HostSession)?.send("LEFT|${e.slot}")
+                    connectionLost("mp.playerLeft")
+                }
+                is NetEvent.Lost -> connectionLost("mp.hostLeft")
+                else -> {}
+            }
+        }
+    }
+
+    /** Alguien se ha ido: aviso y vuelta al menú. */
+    private fun connectionLost(key: String) {
+        if (leaveTimer >= 0 || phase == Phase.OVER) return
+        showToastNow(str[key])
+        audio.play(audio.denied)
+        leaveTimer = 3f
+        phase = Phase.REMOTE
+    }
+
     private fun update(delta: Float) {
         timer += delta
         time += delta
+        pollNet()
+        autoPlayStep()
+        if (leaveTimer >= 0) {
+            leaveTimer -= delta
+            if (leaveTimer < 0) leave()
+            return
+        }
         if (toastTime > 0) {
             toastTime -= delta
-            if (toastTime <= 0 && pendingToasts.isNotEmpty()) {
-                toast = pendingToasts.removeFirst()
+            // Los avisos que llevan esperando más de unos segundos ya no vienen a cuento
+            while (toastTime <= 0 && pendingToasts.isNotEmpty()) {
+                val (msg, at) = pendingToasts.removeFirst()
+                if (time - at > TOAST_MAX_WAIT) continue
+                toast = msg
                 toastTime = TOAST_TIME
             }
         }
         when (phase) {
+            Phase.REMOTE -> {
+                // Jugada de otro móvil: se reproduce como la de la IA
+                val next = remoteMoves.firstOrNull()
+                if (next != null && next.first == state.currentPlayer.index) {
+                    remoteMoves.removeFirst()
+                    aiPlan = next.second
+                    aiRotationsLeft = next.second.rotations
+                    phase = Phase.AI_ROTATE
+                    timer = 0f
+                }
+            }
+
             Phase.AI_THINK -> if (timer > 0.6f) {
-                aiPlan = Ai.plan(state)
+                aiPlan = Ai.plan(state, aiRng)
                 hintMask = -1
                 aiRotationsLeft = aiPlan!!.rotations
                 phase = Phase.AI_ROTATE
@@ -409,6 +573,11 @@ class GameScreen(
             return
         }
         when (phase) {
+            Phase.HANDOFF -> {
+                audio.play(audio.click)
+                beginPlace()
+            }
+
             Phase.PLACE -> {
                 if (spareRect.contains(x, y)) {
                     rotateSpare()
@@ -475,7 +644,7 @@ class GameScreen(
     // ------------------------------------------------------------------ dibujo
 
     override fun render(delta: Float) {
-        if (!paused) update(delta)
+        if (!paused || online != null) update(delta)
         ScreenUtils.clear(Ui.BG)
         viewport.apply()
         batch.projectionMatrix = viewport.camera.combined
@@ -487,6 +656,7 @@ class GameScreen(
         drawToast()
         drawCornerButtons()
         if (phase == Phase.OVER) drawGameOver()
+        if (phase == Phase.HANDOFF) drawHandoff()
         if (paused) drawPause()
         batch.end()
     }
@@ -700,9 +870,9 @@ class GameScreen(
         val h = viewport.worldHeight
         ui.rect(0f, 0f, w, h, Color(0f, 0f, 0f, 0.7f))
         val winner = state.winner ?: return
-        val won = winner === human
+        val won = isMe(winner)
         var y = h / 2 + 96
-        val title = if (won) str["game.youWin"] else str.format("game.wins", str.player(winner.index).uppercase())
+        val title = if (won) str["game.youWin"] else str.format("game.wins", nameOf(winner.index).uppercase())
         ui.textCentered(title, w / 2, y, if (won) Ui.GOLD else Assets.PLAYER_COLORS[winner.index], 2f)
         y -= 44
         batch.draw(a.pawns[winner.index], w / 2 - 16, y - 16, 32f, 32f)
@@ -721,7 +891,7 @@ class GameScreen(
             batch.draw(a.smallCoin, w / 2 + 22, y - 4)
             ui.textCentered(human.coins.toString(), w / 2 + 38, y, Color.WHITE)
             y -= 22
-        } else if (!won) {
+        } else if (!won && !hotSeat) {
             ui.textCentered(str["over.lost"], w / 2, y, Color.WHITE)
             y -= 22
         }
@@ -734,6 +904,18 @@ class GameScreen(
             }
             overButtons.draw()
         }
+    }
+
+    /** Pasándose el móvil: pantalla que tapa el tablero hasta que el siguiente jugador toca. */
+    private fun drawHandoff() {
+        val w = viewport.worldWidth
+        val h = viewport.worldHeight
+        val p = state.currentPlayer
+        ui.rect(0f, 0f, w, h, Ui.BG)
+        ui.textCentered(str.format("mp.handoff", nameOf(p.index)), w / 2, h / 2 + 70, Assets.PLAYER_COLORS[p.index], 2f)
+        val hop = kotlin.math.abs(sin(time * 4f)) * 6f
+        batch.draw(a.pawns[p.index], w / 2 - 24, h / 2 - 10 + hop, 48f, 48f)
+        ui.textWrapped(str["mp.handoffTap"], 20f, h / 2 - 40, w - 40, Color.WHITE, Align.center)
     }
 
     /** Botón MENÚ (abajo a la izquierda, abre la pausa) y botón de sonido (abajo a la derecha). */
@@ -779,6 +961,7 @@ class GameScreen(
         const val SLIDE_TIME = 0.35f
         const val STEP_TIME = 0.12f
         const val TOAST_TIME = 1.8f
+        const val TOAST_MAX_WAIT = 4f
         const val SWAP_TIME = 0.8f
     }
 }

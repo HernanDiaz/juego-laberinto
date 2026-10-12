@@ -14,6 +14,7 @@ Inserisci la tessera libera dal bordo del tabellone per spostare righe e colonne
 • Avversari con personalità: l'ambizioso, l'avventuroso e il tranquillo giocano ognuno a modo suo.
 • 8 livelli con stelle, dal quartiere alla pensione dorata, ognuno con il suo tabellone e le sue regole.
 • Partita libera contro 1, 2 o 3 avversari.
+• Multigiocatore: fino a 4 persone sullo stesso telefono, o ognuno col proprio via Wi-Fi.
 • Pixel art, musica chiptune e 11 lingue.
 
 Completamente gratuito: tutti i livelli inclusi, senza pubblicità, senza acquisti in-app e senza raccolta di dati.

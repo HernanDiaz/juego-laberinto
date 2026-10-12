@@ -28,6 +28,7 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
     private val buttons = Buttons(ui, game.audio)
     private val levelsBtn = buttons.add(a.greenButton, 2f, { s["menu.levels"] }) { game.switchTo(LevelMapScreen(game)) }
     private val freeBtn = buttons.add(a.slateButton, 1f, { s["menu.freePlay"] }) { game.switchTo(FreePlayScreen(game)) }
+    private val multiBtn = buttons.add(a.slateButton, 1f, { s["menu.multiplayer"] }) { game.switchTo(MultiplayerScreen(game)) }
     private val howtoBtn = buttons.add(a.slateButton, 1f, { s["menu.howto"] }) {
         game.overlay(InstructionsScreen(game, this))
     }
@@ -105,16 +106,18 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
 
         // Botones y opción de idioma
         val bx = floor(w / 2 - 70)
-        var y = floor(h * 0.56f)
+        var y = floor(h * 0.58f)
         levelsBtn.rect.set(bx, y, 140f, 38f)
         y -= 40
         freeBtn.rect.set(bx, y, 140f, 28f)
+        y -= 34
+        multiBtn.rect.set(bx, y, 140f, 28f)
         y -= 34
         howtoBtn.rect.set(bx, y, 140f, 28f)
         y -= 34
         exitBtn.rect.set(bx, y, 140f, 28f)
         buttons.draw()
-        language.draw(a, ui, batch, w, y - 64)
+        language.draw(a, ui, batch, w, y - 60)
 
         soundBtn.set(w - 30, h - 30, 26f, 26f)
         batch.draw(if (game.audio.enabled) a.soundOn else a.soundOff, soundBtn.x + 5, soundBtn.y + 5)

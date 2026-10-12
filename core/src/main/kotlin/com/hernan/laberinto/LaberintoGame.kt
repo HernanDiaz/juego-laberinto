@@ -9,7 +9,8 @@ import com.hernan.laberinto.model.Level
 import com.hernan.laberinto.model.Levels
 import com.hernan.laberinto.screens.MenuScreen
 
-open class LaberintoGame : Game() {
+/** [platform]: lo que depende de Android o del escritorio (p. ej. permisos de red). */
+open class LaberintoGame(val platform: Platform = Platform.NONE) : Game() {
     lateinit var assets: Assets
         private set
     lateinit var batch: SpriteBatch

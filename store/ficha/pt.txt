@@ -14,6 +14,7 @@ Empurre a peça solta pela borda do tabuleiro para deslocar linhas e colunas, ab
 • Rivais com personalidade: o ambicioso, o aventureiro e o tranquilo jogam cada um do seu jeito.
 • 8 níveis com estrelas, do bairro à aposentadoria dourada, cada um com seu próprio tabuleiro e suas regras.
 • Jogo livre contra 1, 2 ou 3 rivais.
+• Multijogador: até 4 pessoas no mesmo celular, ou cada uma no seu pelo Wi-Fi.
 • Pixel art, música chiptune e 11 idiomas.
 
 Totalmente grátis: todos os níveis incluídos, sem anúncios, sem compras no app e sem coleta de dados.

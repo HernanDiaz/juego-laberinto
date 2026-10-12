@@ -3,6 +3,7 @@ package com.hernan.laberinto
 import com.hernan.laberinto.model.Ai
 import com.hernan.laberinto.model.Board
 import com.hernan.laberinto.model.Dirs
+import com.hernan.laberinto.model.GameSetup
 import com.hernan.laberinto.model.GameState
 import com.hernan.laberinto.model.Goals
 import com.hernan.laberinto.model.Insert
@@ -177,6 +178,60 @@ class BoardTest {
         }
         println("Rondas por partida: media=${rounds.average()} min=${rounds.min()} max=${rounds.max()}")
         assertTrue(rounds.average() < 40, "Las partidas duran demasiado: ${rounds.average()} rondas")
+    }
+
+    @Test
+    fun elCaminoPrefiereLasMonedas() {
+        // Entre caminos igual de cortos, el elegido debe recoger el máximo de monedas
+        repeat(30) { seed ->
+            val b = Board.generate(Random(seed))
+            val from = Pos(6, 0)
+            val tree = b.paths(from)
+            for (to in tree.keys) {
+                val path = b.path(from, to)!!
+                val bfs = Board.pathIn(tree, to)!!
+                assertEquals(bfs.size, path.size, "Debe seguir siendo el más corto")
+                val coins = { l: List<Pos> -> l.drop(1).count { b[it].item == Item.COIN } }
+                assertTrue(coins(path) >= coins(bfs))
+                path.zipWithNext().forEach { (x, y) -> assertEquals(1, x.dist(y)) }
+            }
+        }
+    }
+
+    @Test
+    fun variosHumanosEnLaMismaPartida() {
+        val s = GameState(GameSetup(humans = 3, numAi = 1, goalsPerStage = 2), Random(9))
+        assertEquals(listOf(false, false, false, true), s.players.map { it.isAi })
+        assertNotNull(s.players[3].personality)
+        assertEquals(null, s.players[1].personality)
+    }
+
+    /**
+     * El modo en red se basa en que la partida es determinista: con la misma semilla y las
+     * mismas jugadas, todos los móviles llegan al mismo estado (sucesos, monedas...).
+     */
+    @Test
+    fun mismaSemillaYMismasJugadasDanElMismoEstado() {
+        repeat(5) { seed ->
+            val setup = GameSetup(humans = 2, numAi = 0, goalsPerStage = 2)
+            val a = GameState(setup, Random(seed))
+            val b = GameState(setup, Random(seed))
+            val decide = Random(100 + seed) // quien elige las jugadas: independiente de las partidas
+            var turns = 0
+            while (a.winner == null && turns < 2000) {
+                val plan = Ai.plan(a, decide, 0.7)
+                for (g in listOf(a, b)) {
+                    repeat(plan.rotations) { g.board.spare.rotateCw() }
+                    g.push(plan.insert)
+                    g.moveCurrent(plan.dest)
+                    g.nextTurn()
+                }
+                turns++
+                assertEquals(a.players.map { listOf(it.pos, it.coins, it.collected) }, b.players.map { listOf(it.pos, it.coins, it.collected) })
+            }
+            assertEquals(a.winner?.index, b.winner?.index)
+            assertEquals(a.board.allCells().map { a.board[it].item }, b.board.allCells().map { b.board[it].item })
+        }
     }
 
     @Test

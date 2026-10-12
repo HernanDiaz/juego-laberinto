@@ -14,6 +14,7 @@ Glisse la tuile libre depuis le bord du plateau pour décaler rangées et colonn
 • Des rivaux avec du caractère : l'ambitieux, l'aventurier et le tranquille jouent chacun à leur façon.
 • 8 niveaux avec étoiles, du quartier à la retraite dorée, chacun avec son plateau et ses règles.
 • Partie libre contre 1, 2 ou 3 rivaux.
+• Multijoueur : jusqu'à 4 personnes sur le même téléphone, ou chacun sur le sien en Wi-Fi.
 • Pixel art, musique chiptune et 11 langues.
 
 Entièrement gratuit : tous les niveaux inclus, sans publicité, sans achats intégrés et sans collecte de données.

@@ -52,6 +52,19 @@ gradlew lwjgl3:run --args="tour <carpeta> lang:es;shot:menu;tap:216,490;wait:60;
 Pasos: `wait:N`, `tap:X,Y`, `key:BACK`, `lang:xx`, `shot:nombre` (ver `TourGame.kt`).
 Requiere JDK 17+ (el de Android Studio sirve: `D:\AndroidStudio\jbr`).
 
+## Multijugador
+- **En este móvil**: de 2 a 4 personas (más rivales IA opcionales) pasándose el móvil; entre turnos
+  una pantalla tapa el tablero para que nadie vea las metas secretas de los demás.
+- **Por Wi-Fi** (como en los otros juegos): todos en la misma Wi-Fi, de 2 a 4 móviles. Uno crea la
+  partida y los demás la encuentran solos o se unen por IP. Código en `core/.../net/Net.kt`.
+  - La partida es determinista: todos usan la misma semilla y solo viajan las jugadas
+    (`MOVE|turno|jugador|giros|lado|línea|fila|col`); el anfitrión las reenvía a los demás.
+  - Puertos: 45144 (TCP, partida) y 45143 (UDP, anuncios). En Windows, el firewall pregunta la
+    primera vez: hay que permitirlo en redes privadas.
+  - Prueba automática con dos copias en el PC (ver `TourGame`): una con
+    `debug:wifi;debug:host;...;debug:start;debug:autoplay` y otra con
+    `debug:wifi;debug:join:127.0.0.1;...;debug:autoplay`; `debug:dump` imprime el estado para compararlo.
+
 ## Publicación en Google Play
 - Juego totalmente gratuito: sin anuncios ni compras dentro de la app.
 - `gradlew android:bundleRelease` genera el `.aab`; la firma se lee de `keystore.properties`

@@ -14,6 +14,7 @@ Schiebe das freie Teil vom Rand ins Spielbrett, um Reihen und Spalten zu verschi
 • Gegner mit Persönlichkeit: der Ehrgeizige, der Abenteuerlustige und der Gelassene spielen jeder auf seine Art.
 • 8 Level mit Sternen, vom Viertel bis zum goldenen Ruhestand, jedes mit eigenem Spielbrett und eigenen Regeln.
 • Freies Spiel gegen 1, 2 oder 3 Gegner.
+• Mehrspieler: bis zu 4 Personen auf einem Handy oder jeder mit seinem eigenen per WLAN.
 • Pixel-Art, Chiptune-Musik und 11 Sprachen.
 
 Komplett kostenlos: alle Level inklusive, keine Werbung, keine In-App-Käufe und keine Datenerfassung.

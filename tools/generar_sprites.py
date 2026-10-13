@@ -4,6 +4,7 @@ Uso:  python tools/generar_sprites.py
 Requiere Pillow. Los resultados son deterministas (semilla fija), así que
 puedes retocar los PNG a mano después o cambiar este script y regenerar.
 """
+import json
 import os
 import random
 from PIL import Image, ImageFont
@@ -850,6 +851,7 @@ def generar_icono():
     tienda = os.path.join(ROOT, "store")
     os.makedirs(tienda, exist_ok=True)
     completo.resize((512, 512), Image.NEAREST).convert("RGB").save(os.path.join(tienda, "icono-512.png"))
+    generar_iconos_ios(completo)
 
     # Icono adaptativo: capas de 108 dp (36 px de arte)
     fg = figura(36)
@@ -877,6 +879,34 @@ def generar_icono():
     for nombre in ("ic_launcher.xml", "ic_launcher_round.xml"):
         with open(os.path.join(d, nombre), "w", encoding="utf-8") as f:
             f.write(xml)
+
+
+def generar_iconos_ios(completo):
+    """Iconos de iPhone/iPad (ios/data/Media.xcassets/AppIcon.appiconset), sin transparencia.
+
+    iOS redondea las esquinas por su cuenta. Se escala primero a 1024 (32 x 32, exacto) y de ahí
+    a cada tamaño.
+    """
+    d = os.path.join(ROOT, "ios", "data", "Media.xcassets", "AppIcon.appiconset")
+    os.makedirs(d, exist_ok=True)
+    grande = completo.resize((1024, 1024), Image.NEAREST).convert("RGB")
+    # (idioma, tamaño en puntos, escala)
+    tamanos = [("iphone", 20, 2), ("iphone", 20, 3), ("iphone", 29, 2), ("iphone", 29, 3),
+               ("iphone", 40, 2), ("iphone", 40, 3), ("iphone", 60, 2), ("iphone", 60, 3),
+               ("ipad", 20, 1), ("ipad", 20, 2), ("ipad", 29, 1), ("ipad", 29, 2),
+               ("ipad", 40, 1), ("ipad", 40, 2), ("ipad", 76, 1), ("ipad", 76, 2),
+               ("ipad", 83.5, 2), ("ios-marketing", 1024, 1)]
+    imagenes = []
+    for idiom, pt, esc in tamanos:
+        px = int(pt * esc)
+        nombre = f"icon-{idiom}-{pt}@{esc}x.png"
+        img = grande if px == 1024 else grande.resize((px, px), Image.LANCZOS if px % 32 else Image.NEAREST)
+        img.save(os.path.join(d, nombre))
+        imagenes.append({"size": f"{pt}x{pt}", "idiom": idiom, "filename": nombre, "scale": f"{esc}x"})
+    with open(os.path.join(d, "Contents.json"), "w", encoding="utf-8") as f:
+        json.dump({"images": imagenes, "info": {"version": 1, "author": "xcode"}}, f, indent=2)
+    with open(os.path.join(ROOT, "ios", "data", "Media.xcassets", "Contents.json"), "w", encoding="utf-8") as f:
+        json.dump({"info": {"version": 1, "author": "xcode"}}, f, indent=2)
 
 
 if __name__ == "__main__":

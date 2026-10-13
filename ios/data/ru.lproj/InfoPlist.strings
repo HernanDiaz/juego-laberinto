@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "Повороты судьбы";
+CFBundleName = "Повороты судьбы";
+NSLocalNetworkUsageDescription = "Чтобы играть по Wi-Fi с другими телефонами в вашей сети.";

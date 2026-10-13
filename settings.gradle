@@ -7,3 +7,5 @@ pluginManagement {
 }
 rootProject.name = 'Laberinto'
 include 'core', 'lwjgl3', 'android'
+// iOS solo se puede compilar en un Mac (en GitHub Actions, ver README): en Windows se omite
+if (System.getProperty('os.name').toLowerCase().contains('mac') || System.getProperty('incluirIos')) include 'ios'

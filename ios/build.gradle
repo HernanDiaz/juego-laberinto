@@ -1,0 +1,33 @@
+// Versión para iPhone/iPad con MobiVM (RoboVM). Solo se compila en un Mac: settings.gradle
+// incluye este módulo únicamente en macOS, y el Mac es el de GitHub Actions (.github/workflows/ios.yml).
+buildscript {
+    ext.robovmVersion = '2.3.26'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.mobidevelop.robovm:robovm-gradle-plugin:$robovmVersion"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'robovm'
+
+// RoboVM entiende bytecode de Java 8
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+kotlin {
+    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8 }
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "com.mobidevelop.robovm:robovm-rt:$robovmVersion"
+    implementation "com.mobidevelop.robovm:robovm-cocoatouch:$robovmVersion"
+    // libGDX 1.12-1.14 dibuja en iOS con MetalANGLE (OpenGL ES sobre Metal)
+    implementation "com.badlogicgames.gdx:gdx-backend-robovm-metalangle:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
+}

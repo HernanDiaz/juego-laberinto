@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "Liku-liku Kehidupan";
+CFBundleName = "Liku-liku Kehidupan";
+NSLocalNetworkUsageDescription = "Untuk bermain lewat Wi-Fi dengan ponsel lain di jaringanmu.";

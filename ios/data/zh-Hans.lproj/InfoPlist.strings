@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "人生迷宫";
+CFBundleName = "人生迷宫";
+NSLocalNetworkUsageDescription = "用于通过Wi-Fi与同一网络中的其他手机对战。";

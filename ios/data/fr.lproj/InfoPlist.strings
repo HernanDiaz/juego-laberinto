@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "Les détours de la vie";
+CFBundleName = "Les détours de la vie";
+NSLocalNetworkUsageDescription = "Pour jouer en Wi-Fi avec d'autres téléphones de ton réseau.";

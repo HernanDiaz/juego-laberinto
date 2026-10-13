@@ -22,6 +22,10 @@ class Buttons(private val ui: Ui, private val audio: Audio) {
     fun add(style: Array<NinePatch>, scale: Float = 1f, label: () -> String, onClick: () -> Unit) =
         PixelButton(style, scale, label, onClick).also { list.add(it) }
 
+    fun remove(button: PixelButton) {
+        list.remove(button)
+    }
+
     fun down(x: Float, y: Float): Boolean {
         val b = list.firstOrNull { it.rect.contains(x, y) } ?: return false
         b.pressed = true

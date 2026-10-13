@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "Las vueltas de la vida";
+CFBundleName = "Las vueltas de la vida";
+NSLocalNetworkUsageDescription = "Para jugar por Wi-Fi con otros móviles de tu red.";

@@ -33,6 +33,7 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
         game.overlay(InstructionsScreen(game, this))
     }
     private val exitBtn = buttons.add(a.slateButton, 1f, { s["menu.exit"] }) { Gdx.app.exit() }
+        .also { if (!game.platform.canQuit) buttons.remove(it) }
 
     private val soundBtn = Rectangle()
     private val touch = Vector2()
@@ -62,7 +63,7 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
 
         override fun keyDown(keycode: Int): Boolean {
             when (keycode) {
-                Input.Keys.BACK, Input.Keys.ESCAPE -> Gdx.app.exit()
+                Input.Keys.BACK, Input.Keys.ESCAPE -> if (game.platform.canQuit) Gdx.app.exit()
                 Input.Keys.ENTER, Input.Keys.SPACE -> game.switchTo(LevelMapScreen(game))
             }
             return true

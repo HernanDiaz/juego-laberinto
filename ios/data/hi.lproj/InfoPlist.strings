@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "ज़िंदगी के मोड़";
+CFBundleName = "ज़िंदगी के मोड़";
+NSLocalNetworkUsageDescription = "अपने नेटवर्क के दूसरे फ़ोन के साथ Wi-Fi पर खेलने के लिए।";

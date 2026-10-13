@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "As voltas da vida";
+CFBundleName = "As voltas da vida";
+NSLocalNetworkUsageDescription = "Para jogar pelo Wi-Fi com outros celulares da sua rede.";

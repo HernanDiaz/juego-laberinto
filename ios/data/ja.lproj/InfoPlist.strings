@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "人生めいろ";
+CFBundleName = "人生めいろ";
+NSLocalNetworkUsageDescription = "同じWi-Fiの他のスマホと対戦するために使います。";

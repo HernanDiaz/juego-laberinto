@@ -22,6 +22,7 @@ empujan son fijas) y `straight`, `corner`, `tee`, `cross`, `deadEnd` son los pes
 - `core/` – lógica (tablero, reglas, IA) y pantallas.
 - `android/` – lanzador de Android.
 - `lwjgl3/` – lanzador de escritorio para probar rápido en el PC.
+- `ios/` – lanzador de iPhone/iPad (MobiVM/RoboVM). Solo se carga en un Mac: en Windows Gradle lo ignora.
 - `assets/` – sprites y sonidos generados por los scripts de `tools/`.
 
 ## Comandos
@@ -64,6 +65,47 @@ Requiere JDK 17+ (el de Android Studio sirve: `D:\AndroidStudio\jbr`).
   - Prueba automática con dos copias en el PC (ver `TourGame`): una con
     `debug:wifi;debug:host;...;debug:start;debug:autoplay` y otra con
     `debug:wifi;debug:join:127.0.0.1;...;debug:autoplay`; `debug:dump` imprime el estado para compararlo.
+
+## iPhone / iPad (TestFlight, sin Mac)
+
+El juego se compila para iOS en un Mac de GitHub (GitHub Actions, `.github/workflows/ios.yml`) y se
+sube a **TestFlight**; desde ahí se instala en el iPhone. Es el mismo sistema que en los otros juegos,
+pero aquí la app la compila **MobiVM (RoboVM)**, que convierte el código Kotlin/Java a código nativo
+de iOS, y el workflow monta el `.xcarchive` a mano para que Xcode la firme y la suba.
+
+> **Sin probar todavía:** este workflow no se ha ejecutado nunca. La primera vez puede fallar en
+> algún paso (sobre todo en el último, la firma de un archivo que no ha creado Xcode) y habrá que
+> ajustarlo mirando el registro de GitHub.
+
+Para configurarlo (solo la primera vez):
+
+1. **Apple Developer** (99 USD/año): la misma cuenta de los otros juegos.
+2. **Crear la app** en [App Store Connect](https://appstoreconnect.apple.com) → *Apps* → **+** → *Nueva app*:
+   - Plataforma iOS, nombre "Las vueltas de la vida" e idioma principal español.
+   - ID de paquete (*Bundle ID*): `com.hernandiaz.vueltasdelavida` (el mismo que en Android). Si no
+     aparece en la lista, créalo antes en developer.apple.com → *Identifiers* → **+** → *App IDs*.
+   - SKU: cualquiera, por ejemplo `vueltas-de-la-vida`.
+3. **Secretos en GitHub** (en este repositorio): *Settings* → *Secrets and variables* → *Actions*.
+   Son los mismos cuatro de los otros juegos, se puede reutilizar la misma clave de API:
+   `APPLE_TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID` y `ASC_KEY_P8` (el contenido completo del `.p8`).
+
+Para compilar una versión: GitHub → *Actions* → **iOS (TestFlight)** → *Run workflow*. Nunca se lanza
+solo. La primera vez tarda más (RoboVM compila toda la biblioteca de Java; luego queda en caché).
+Cuando termina, aparece en App Store Connect → *TestFlight*.
+
+Notas:
+- **Minutos de GitHub:** en un repositorio privado, las máquinas Mac gastan minutos del plan x10.
+- **Versión:** `ios/robovm.properties` (`app.version`); el número de compilación lo pone el workflow.
+- **Iconos:** `python tools/generar_sprites.py` también genera los de iOS (`ios/data/Media.xcassets`).
+- **Nombre en cada idioma:** `ios/data/<idioma>.lproj/InfoPlist.strings`.
+- **Java 8:** RoboVM solo entiende bytecode de Java 8, así que `core` se compila para Java 8
+  (Android y escritorio lo usan igual).
+- **Búsqueda de partidas por Wi-Fi:** en iPhone necesita que Apple conceda el permiso *multicast*
+  (`com.apple.developer.networking.multicast`, se pide en developer.apple.com/contact/request/networking-multicast).
+  Mientras tanto se juega **uniéndose por IP**. iOS pide permiso de "red local" la primera vez.
+- **Botón Salir:** en iOS no aparece, porque las apps no pueden cerrarse solas.
+- Para comprobar en Windows que el lanzador de iOS compila (solo el código, no la app):
+  `gradlew -DincluirIos=1 ios:compileKotlin`.
 
 ## Publicación en Google Play
 - Juego totalmente gratuito: sin anuncios ni compras dentro de la app.

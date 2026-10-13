@@ -1,0 +1,4 @@
+/* Nombre bajo el icono y texto del permiso de red local */
+CFBundleDisplayName = "Twists of Life";
+CFBundleName = "Twists of Life";
+NSLocalNetworkUsageDescription = "To play over Wi-Fi with other phones on your network.";

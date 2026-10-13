@@ -1,0 +1,157 @@
+# Compila el juego para iOS en un Mac de GitHub y lo sube a TestFlight.
+# Se lanza a mano: GitHub → Actions → "iOS (TestFlight)" → Run workflow. Nunca se lanza solo
+# (los minutos de Mac cuestan 10 veces más en repositorios privados).
+#
+# Secretos necesarios (Settings → Secrets and variables → Actions), ver README, sección iPhone:
+#   APPLE_TEAM_ID   ID de equipo de Apple Developer (10 caracteres)
+#   ASC_KEY_ID      ID de la clave de API de App Store Connect
+#   ASC_ISSUER_ID   ID del emisor (Issuer ID) de App Store Connect
+#   ASC_KEY_P8      Contenido completo del archivo AuthKey_XXXX.p8
+#
+# Igual que en los otros juegos: se compila sin firmar y Xcode firma al exportar para
+# App Store Connect, creando él mismo el certificado y el perfil con la clave de API.
+# Aquí la app la compila MobiVM (RoboVM) en vez de Xcode, así que el .xcarchive se monta a mano.
+
+name: iOS (TestFlight)
+
+on:
+  workflow_dispatch:
+
+env:
+  APP_NAME: VueltasDeLaVida
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Comprobar secretos
+        run: |
+          missing=0
+          for name in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Falta el secreto $name (ver README, sección iPhone)"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      # Apple exige compilar con el SDK de iOS 26 para subir a la App Store: Xcode 26 o posterior.
+      - name: Elegir Xcode
+        run: |
+          echo "Versiones de Xcode instaladas:"; ls -d /Applications/Xcode*.app
+          xcode=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$xcode" ]; then
+            echo "::error::Esta máquina no tiene Xcode 26 o posterior (ver la lista de arriba)"
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcodebuild -version
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      # RoboVM compila a código nativo toda la biblioteca de Java la primera vez (lento): se guarda.
+      - name: Caché de RoboVM
+        uses: actions/cache@v4
+        with:
+          path: ~/.robovm/cache
+          key: robovm-${{ hashFiles('ios/build.gradle') }}
+
+      - name: Número de compilación
+        # Cada subida a Apple necesita un número distinto: se usa el número de ejecución del workflow.
+        run: sed -i '' "s/^app.build=.*/app.build=${{ github.run_number }}/" ios/robovm.properties
+
+      # Sin firmar: la firma de distribución se hace en el último paso, al exportar.
+      - name: Compilar con RoboVM
+        run: |
+          chmod +x gradlew
+          ./gradlew ios:robovmInstall -Probovm.iosSkipSigning=true -Probovm.archs=arm64 --no-daemon --stacktrace
+          app=$(find ios/build/robovm -maxdepth 2 -name "${APP_NAME}.app" -type d | head -1)
+          if [ -z "$app" ]; then
+            echo "::error::No se encuentra ${APP_NAME}.app"; find ios/build/robovm -maxdepth 3; exit 1
+          fi
+          echo "APP_PATH=$app" >> "$GITHUB_ENV"
+          /usr/libexec/PlistBuddy -c Print "$app/Info.plist"
+
+      - name: Montar el .xcarchive
+        run: |
+          archive="build/ios/${APP_NAME}.xcarchive"
+          mkdir -p "$archive/Products/Applications"
+          cp -R "$APP_PATH" "$archive/Products/Applications/"
+          app="$archive/Products/Applications/${APP_NAME}.app"
+          rm -rf "$app/_CodeSignature" "$app/embedded.mobileprovision"
+          plist="$app/Info.plist"
+          id=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$plist")
+          version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$plist")
+          build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$plist")
+          cat > "$archive/Info.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>ApplicationProperties</key>
+            <dict>
+              <key>ApplicationPath</key><string>Applications/${APP_NAME}.app</string>
+              <key>Architectures</key><array><string>arm64</string></array>
+              <key>CFBundleIdentifier</key><string>${id}</string>
+              <key>CFBundleShortVersionString</key><string>${version}</string>
+              <key>CFBundleVersion</key><string>${build}</string>
+              <key>SigningIdentity</key><string></string>
+              <key>Team</key><string>${APPLE_TEAM_ID}</string>
+            </dict>
+            <key>ArchiveVersion</key><integer>2</integer>
+            <key>CreationDate</key><date>$(date -u +%Y-%m-%dT%H:%M:%SZ)</date>
+            <key>Name</key><string>${APP_NAME}</string>
+            <key>SchemeName</key><string>${APP_NAME}</string>
+          </dict>
+          </plist>
+          EOF
+          plutil -lint "$archive/Info.plist"
+          echo "ARCHIVE_PATH=$archive" >> "$GITHUB_ENV"
+
+      - name: Clave de App Store Connect
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s\n' "$ASC_KEY_P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          echo "ASC_KEY_PATH=$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      - name: Firmar y subir a TestFlight
+        run: |
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/ios/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          echo "Subido. En unos minutos aparecerá en App Store Connect → TestFlight (compilación ${{ github.run_number }})."
+
+      - name: Borrar la clave
+        if: always()
+        run: rm -rf ~/private_keys

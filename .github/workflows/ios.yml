@@ -64,7 +64,8 @@ jobs:
 
       # RoboVM compila a código nativo toda la biblioteca de Java la primera vez (lento): se guarda.
       - name: Caché de RoboVM
-        uses: actions/cache@v4
+        id: robovm-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.robovm/cache
           key: robovm-${{ hashFiles('ios/build.gradle') }}
@@ -78,12 +79,23 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew ios:robovmInstall -Probovm.iosSkipSigning=true -Probovm.archs=arm64 --no-daemon --stacktrace
-          app=$(find ios/build/robovm -maxdepth 2 -name "${APP_NAME}.app" -type d | head -1)
-          if [ -z "$app" ]; then
-            echo "::error::No se encuentra ${APP_NAME}.app"; find ios/build/robovm -maxdepth 3; exit 1
+          # robovmInstall deja el contenido de la app directamente en ios/build/robovm/
+          if [ ! -x "ios/build/robovm/${APP_NAME}" ]; then
+            echo "::error::No se encuentra el ejecutable ${APP_NAME}"; find ios/build/robovm -maxdepth 1; exit 1
           fi
+          app="build/ios/${APP_NAME}.app"
+          mkdir -p "$app"
+          cp -R ios/build/robovm/. "$app/"
           echo "APP_PATH=$app" >> "$GITHUB_ENV"
           /usr/libexec/PlistBuddy -c Print "$app/Info.plist"
+
+      # Se guarda aunque luego falle la firma, para no volver a compilarlo todo en el siguiente intento.
+      - name: Guardar RoboVM en caché
+        if: steps.robovm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.robovm/cache
+          key: robovm-${{ hashFiles('ios/build.gradle') }}
 
       - name: Montar el .xcarchive
         run: |

@@ -75,7 +75,7 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
     }
 
     override fun resize(width: Int, height: Int) {
-        viewport.update(width, height, true)
+        viewport.updateSafe(width, height)
     }
 
     override fun render(delta: Float) {

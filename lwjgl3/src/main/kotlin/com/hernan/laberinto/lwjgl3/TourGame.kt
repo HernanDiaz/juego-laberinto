@@ -14,6 +14,7 @@ import com.hernan.laberinto.screens.LocalSetupScreen
 import com.hernan.laberinto.screens.MenuScreen
 import com.hernan.laberinto.screens.MultiplayerScreen
 import com.hernan.laberinto.screens.PlayMode
+import com.hernan.laberinto.screens.SafeArea
 import com.hernan.laberinto.screens.WifiScreen
 import java.util.zip.Deflater
 
@@ -36,6 +37,7 @@ import java.util.zip.Deflater
  *   debug:select:N  ficha del nivel N en el mapa;  debug:play:N  jugar el nivel N (desde 0)
  *   debug:howto:P   instrucciones en la página P;  debug:stars:3,2,2  estrellas guardadas
  *   shot:NOMBRE   guarda <outDir>/NOMBRE.png
+ *   safe:0,59,0,34  simula el notch y la barra de inicio de un iPhone
  *   rec:on / rec:off  graba cada fotograma en <outDir>/f_00000.png... con el tiempo fijo a 1/30 s
  *                 (vídeo fluido aunque guardar sea lento; montarlo con ffmpeg a 30 fps)
  */
@@ -125,6 +127,8 @@ class TourGame(private val outDir: String, script: String, ios: Boolean = false)
             }
             "shot" -> save(arg, Deflater.DEFAULT_COMPRESSION)
             "rec" -> recording = arg == "on"
+            // safe:I,A,D,B  simula la zona segura del iPhone (izquierda, arriba, derecha, abajo)
+            "safe" -> SafeArea.simulated = arg.split(',').map { it.trim().toInt() }.toIntArray()
             else -> error("Paso desconocido: $step")
         }
     }

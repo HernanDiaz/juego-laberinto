@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hernan.laberinto.model.Level
 import com.hernan.laberinto.model.Levels
 import com.hernan.laberinto.screens.MenuScreen
+import com.hernan.laberinto.screens.SafeArea
 
 /** [platform]: lo que depende de Android o del escritorio (p. ej. permisos de red). */
 open class LaberintoGame(val platform: Platform = Platform.NONE) : Game() {
@@ -58,6 +59,18 @@ open class LaberintoGame(val platform: Platform = Platform.NONE) : Game() {
         val old = screen
         setScreen(previous)
         old?.dispose()
+    }
+
+    private var safeInsets = ""
+
+    override fun render() {
+        // iOS puede avisar de la zona segura (notch) después del primer resize: se recoloca todo
+        val insets = "${SafeArea.left},${SafeArea.top},${SafeArea.right},${SafeArea.bottom}"
+        if (insets != safeInsets) {
+            safeInsets = insets
+            screen?.resize(Gdx.graphics.width, Gdx.graphics.height)
+        }
+        super.render()
     }
 
     override fun dispose() {

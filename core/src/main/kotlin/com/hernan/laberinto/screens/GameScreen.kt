@@ -225,7 +225,7 @@ class GameScreen(
     }
 
     override fun resize(width: Int, height: Int) {
-        viewport.update(width, height, true)
+        viewport.updateSafe(width, height)
         val w = viewport.worldWidth
         val h = viewport.worldHeight
         boardX = floor((w - BOARD_PX) / 2)

@@ -148,7 +148,7 @@ class LevelMapScreen(private val game: LaberintoGame) : ScreenAdapter() {
     }
 
     override fun resize(width: Int, height: Int) {
-        viewport.update(width, height, true)
+        viewport.updateSafe(width, height)
         if (!scrollInitialized) {
             // Centrar el mapa en el nivel que toca jugar
             val h = viewport.worldHeight

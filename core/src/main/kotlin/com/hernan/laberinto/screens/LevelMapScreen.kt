@@ -119,6 +119,11 @@ class LevelMapScreen(private val game: LaberintoGame) : ScreenAdapter() {
         }
     }
 
+    /** (Modo tour) abre la ficha de un nivel. */
+    fun debugSelect(level: Int) {
+        selected = level
+    }
+
     private fun tapNode(x: Float, y: Float) {
         val w = viewport.worldWidth
         for (i in levels.indices) {

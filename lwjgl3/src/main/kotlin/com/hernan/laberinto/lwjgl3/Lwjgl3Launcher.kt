@@ -6,7 +6,8 @@ import com.hernan.laberinto.LaberintoGame
 
 /**
  * Uso normal: gradlew lwjgl3:run
- * Modo tour (pruebas/capturas): gradlew lwjgl3:run --args="tour <carpeta> <guion> [ANCHOxALTO]"  (ver TourGame)
+ * Modo tour (pruebas/capturas): gradlew lwjgl3:run --args="tour <carpeta> <guion> [ANCHOxALTO] [ios]"  (ver TourGame)
+ * Con "ios" el juego se comporta como en iPhone (sin botón Salir), para las capturas de la App Store.
  */
 fun main(args: Array<String>) {
     val config = Lwjgl3ApplicationConfiguration().apply {
@@ -17,6 +18,6 @@ fun main(args: Array<String>) {
         useVsync(true)
         setForegroundFPS(60)
     }
-    val game = if (args.size >= 3 && args[0] == "tour") TourGame(args[1], args[2]) else LaberintoGame()
+    val game = if (args.size >= 3 && args[0] == "tour") TourGame(args[1], args[2], ios = args.getOrNull(4) == "ios") else LaberintoGame()
     Lwjgl3Application(game, config)
 }

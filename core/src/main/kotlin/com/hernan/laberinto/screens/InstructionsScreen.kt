@@ -43,6 +43,12 @@ class InstructionsScreen(private val game: LaberintoGame, private val previous: 
 
     private fun close() = game.returnTo(previous)
 
+    /** (Modo tour) va a una página. */
+    fun debugPage(p: Int) {
+        page = p
+        time = 0f
+    }
+
     private val input = object : InputAdapter() {
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
             viewport.unproject(touch.set(screenX.toFloat(), screenY.toFloat()))

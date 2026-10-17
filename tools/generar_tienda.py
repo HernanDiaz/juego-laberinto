@@ -1,12 +1,14 @@
-"""Material gráfico para la ficha de Google Play (carpeta store/).
+"""Material gráfico para las fichas de Google Play y de la App Store (carpeta store/).
 
 Uso:
-  1. Capturas con el modo tour a 540x960 (ver README), en una carpeta con archivos <idioma>_N_nombre.png
-  2. python tools/generar_tienda.py <carpeta_capturas>
+  1. bash tools/capturas_tienda.sh   (capturas con el modo tour en build/capturas/<tienda>/)
+  2. python tools/generar_tienda.py  (o indicando otra carpeta de capturas)
 
-Genera:
-  - store/capturas/<idioma>/N_nombre.png  a 1080x1920 (escalado x2 sin suavizar, como pixel art)
-  - store/destacada_<idioma>.png           imagen destacada de 1024x500
+Genera, escalando sin suavizar (pixel art):
+  - store/capturas/<idioma>/N_nombre.png          Google Play, 1080x1920 (x2)
+  - store/capturas_ios/iphone/<idioma>/...        App Store iPhone 6,7"/6,9", 1290x2796 (x3)
+  - store/capturas_ios/ipad/<idioma>/...          App Store iPad 13", 2048x2732 (x4)
+  - store/destacada_<idioma>.png                  imagen destacada de Google Play, 1024x500
 El icono de 512x512 (store/icono-512.png) lo genera generar_sprites.py.
 """
 import glob
@@ -93,19 +95,25 @@ def destacada(idioma, glifos):
     return fondo.convert("RGB")
 
 
+# carpeta de build/capturas -> (carpeta en store/, escala)
+TIENDAS = {
+    "android": ("capturas", 2),
+    "iphone": (os.path.join("capturas_ios", "iphone"), 3),
+    "ipad": (os.path.join("capturas_ios", "ipad"), 4),
+}
+
+
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        return
-    origen = sys.argv[1]
+    origen = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "build", "capturas")
     glifos = fuente_latina()
-    for ruta in sorted(glob.glob(os.path.join(origen, "*_*.png"))):
-        nombre = os.path.basename(ruta)
-        idioma, resto = nombre.split("_", 1)
-        img = Image.open(ruta).convert("RGB")
-        destino = os.path.join(STORE, "capturas", idioma)
-        os.makedirs(destino, exist_ok=True)
-        img.resize((img.width * 2, img.height * 2), Image.NEAREST).save(os.path.join(destino, resto))
+    for tienda, (carpeta, escala) in TIENDAS.items():
+        for ruta in sorted(glob.glob(os.path.join(origen, tienda, "*_*.png"))):
+            nombre = os.path.basename(ruta)
+            idioma, resto = nombre.split("_", 1)
+            img = Image.open(ruta).convert("RGB")
+            destino = os.path.join(STORE, carpeta, idioma)
+            os.makedirs(destino, exist_ok=True)
+            img.resize((img.width * escala, img.height * escala), Image.NEAREST).save(os.path.join(destino, resto))
     for idioma in TITULOS:
         destacada(idioma, glifos).save(os.path.join(STORE, f"destacada_{idioma}.png"))
     print("Material de la tienda en", STORE)

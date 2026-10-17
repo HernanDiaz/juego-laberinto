@@ -32,6 +32,9 @@ gradlew core:test             # tests de reglas + partida IA vs IA
 gradlew android:assembleDebug # APK en android/build/outputs/apk/debug/
 python tools/generar_sprites.py   # sprites (necesita Pillow)
 python tools/generar_sonidos.py   # efectos y música chiptune
+bash tools/capturas_tienda.sh     # capturas (Android, iPhone, iPad) con el modo tour...
+python tools/generar_tienda.py    # ...escaladas a store/capturas y store/capturas_ios
+bash tools/video_tienda.sh        # vídeos de 28 s en store/videos (necesita ffmpeg)
 ```
 
 ## Idiomas

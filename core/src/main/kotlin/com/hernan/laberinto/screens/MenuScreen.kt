@@ -115,8 +115,10 @@ class MenuScreen(private val game: LaberintoGame) : ScreenAdapter() {
         multiBtn.rect.set(bx, y, 140f, 28f)
         y -= 34
         howtoBtn.rect.set(bx, y, 140f, 28f)
-        y -= 34
-        exitBtn.rect.set(bx, y, 140f, 28f)
+        if (game.platform.canQuit) {
+            y -= 34
+            exitBtn.rect.set(bx, y, 140f, 28f)
+        }
         buttons.draw()
         language.draw(a, ui, batch, w, y - 60)
 

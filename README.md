@@ -110,6 +110,15 @@ Notas:
 - Para comprobar en Windows que el lanzador de iOS compila (solo el código, no la app):
   `gradlew -DincluirIos=1 ios:compileKotlin`.
 
+## Ficha de las tiendas
+- **Web de soporte y política de privacidad** (para las dos tiendas): repositorio aparte
+  https://github.com/HernanDiaz/vueltas-de-la-vida-web, publicado con GitHub Pages en
+  https://hernandiaz.github.io/vueltas-de-la-vida-web/ (privacidad: `privacy.html`). El contacto es
+  abriendo una incidencia en ese repositorio, como en los otros juegos. `store/privacidad.html` es una copia antigua.
+- **App Store:** textos (nombre, subtítulo, texto promocional, palabras clave, descripción, URLs y copyright)
+  en `store/appstore/es.txt` y `en.txt`; capturas en `store/capturas_ios/`, vídeos en `store/videos/`.
+- **Google Play:** textos en `store/ficha/`, capturas en `store/capturas/`.
+
 ## Publicación en Google Play
 - Juego totalmente gratuito: sin anuncios ni compras dentro de la app.
 - `gradlew android:bundleRelease` genera el `.aab`; la firma se lee de `keystore.properties`

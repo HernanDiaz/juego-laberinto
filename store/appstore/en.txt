@@ -1,0 +1,38 @@
+NOMBRE (30)
+Twists of Life
+
+SUBTÍTULO (30)
+Shift the maze of your life
+
+TEXTO PROMOCIONAL (170)
+Shift the maze, reach your goals of youth, adulthood and golden years, and get home to retire before your rivals. 8 levels, multiplayer and totally free.
+
+PALABRAS CLAVE (100)
+maze,labyrinth,puzzle,pixel art,retro,board game,life,goals,family,multiplayer,wifi,strategy
+
+DESCRIPCIÓN (4000)
+Twists of Life is a pixel-art maze game where the path changes every turn, just like life.
+
+Push the loose tile in from the edge of the board to shift rows and columns, open a way to your goals and block your rivals.
+
+• Three stages of life: youth, adulthood and golden years. Reach your goals (a diploma, a motorbike, a wedding, a house, the trip of your dreams...) and get back home to retire before anyone else.
+• Money and events: collect coins, pay for the goals that cost money and take your chances on the "?" squares: inheritances, lotteries, fines... or an unexpected move!
+• Rivals with personality: the ambitious one, the adventurer and the laid-back one each play their own way.
+• 8 levels with stars, from the neighbourhood to golden retirement, each with its own board and rules.
+• Free play against 1, 2 or 3 rivals.
+• Multiplayer: up to 4 people on the same phone, or each on their own phone over Wi-Fi.
+• Pixel art, chiptune music and 11 languages.
+
+Completely free: every level included, no ads, no in-app purchases and no data collection.
+
+URL DE SOPORTE
+https://hernandiaz.github.io/vueltas-de-la-vida-web/
+
+URL DE MARKETING
+https://hernandiaz.github.io/vueltas-de-la-vida-web/
+
+POLÍTICA DE PRIVACIDAD
+https://hernandiaz.github.io/vueltas-de-la-vida-web/privacy.html
+
+COPYRIGHT
+2026 Hernán Díaz Rodríguez

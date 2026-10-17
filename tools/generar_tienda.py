@@ -6,7 +6,7 @@ Uso:
 
 Genera, escalando sin suavizar (pixel art):
   - store/capturas/<idioma>/N_nombre.png          Google Play, 1080x1920 (x2)
-  - store/capturas_ios/iphone/<idioma>/...        App Store iPhone 6,7"/6,9", 1290x2796 (x3)
+  - store/capturas_ios/iphone/<idioma>/...        App Store iPhone 6,3", 1206x2622 (x3)
   - store/capturas_ios/ipad/<idioma>/...          App Store iPad 13", 2048x2732 (x4)
   - store/destacada_<idioma>.png                  imagen destacada de Google Play, 1024x500
 El icono de 512x512 (store/icono-512.png) lo genera generar_sprites.py.

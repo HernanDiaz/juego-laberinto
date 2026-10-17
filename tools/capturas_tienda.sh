@@ -19,8 +19,8 @@ debug:howto:1;wait:40;shot:${l}_7_howto"
 }
 
 # carpeta, tamaño de ventana, "ios" o nada.  Cada tienda escala luego sin suavizar:
-#   android 540x960 x2 = 1080x1920 · iphone 430x932 x3 = 1290x2796 · ipad 512x683 x4 = 2048x2732
-for destino in "android 540x960" "iphone 430x932 ios" "ipad 512x683 ios"; do
+#   android 540x960 x2 = 1080x1920 · iphone 402x874 x3 = 1206x2622 (6,3") · ipad 512x683 x4 = 2048x2732
+for destino in "android 540x960" "iphone 402x874 ios" "ipad 512x683 ios"; do
     set -- $destino
     mkdir -p "$OUT/$1"
     for l in es en; do

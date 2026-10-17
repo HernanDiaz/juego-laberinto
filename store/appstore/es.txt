@@ -1,0 +1,38 @@
+NOMBRE (30)
+Las vueltas de la vida
+
+SUBTÍTULO (30)
+Mueve el laberinto de tu vida
+
+TEXTO PROMOCIONAL (170)
+Desplaza el laberinto, consigue tus metas de juventud, adultez y madurez y vuelve a casa para jubilarte antes que tus rivales. 8 niveles, multijugador y gratis.
+
+PALABRAS CLAVE (100)
+laberinto,puzle,pixel art,retro,tablero,metas,vida,familia,multijugador,wifi,estrategia,casual
+
+DESCRIPCIÓN (4000)
+Las vueltas de la vida es un juego de laberintos en pixel art en el que el camino cambia en cada turno, igual que la vida.
+
+Mete la pieza suelta por el borde del tablero para desplazar filas y columnas, ábrete paso hacia tus metas y ciérraselo a tus rivales.
+
+• Tres etapas de la vida: juventud, adultez y madurez. Consigue tus metas (el diploma, la moto, la boda, la casa, el viaje de tus sueños...) y vuelve a casa para jubilarte antes que nadie.
+• Dinero y sucesos: recoge monedas, paga lo que cuesta cada meta y arriésgate en las casillas "?": herencias, loterías, multas... ¡o una mudanza inesperada!
+• Rivales con personalidad: el ambicioso, el aventurero y el tranquilo juegan cada uno a su manera.
+• 8 niveles con estrellas, del barrio a la jubilación dorada, cada uno con su propio tablero y sus reglas.
+• Partida libre contra 1, 2 o 3 rivales.
+• Multijugador: hasta 4 personas en el mismo móvil o cada una con el suyo por Wi-Fi.
+• Pixel art, música chiptune y 11 idiomas.
+
+Totalmente gratis: todos los niveles incluidos, sin anuncios, sin compras dentro de la app y sin recoger datos.
+
+URL DE SOPORTE
+https://hernandiaz.github.io/vueltas-de-la-vida-web/
+
+URL DE MARKETING
+https://hernandiaz.github.io/vueltas-de-la-vida-web/
+
+POLÍTICA DE PRIVACIDAD
+https://hernandiaz.github.io/vueltas-de-la-vida-web/privacy.html
+
+COPYRIGHT
+2026 Hernán Díaz Rodríguez

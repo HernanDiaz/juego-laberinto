@@ -11,3 +11,7 @@ keystore.properties
 *.keystore
 # APK de pruebas copiado a la raíz
 *.apk
+# Grabaciones de pantalla (pesadas)
+*.MP4
+*.mov
+*.MOV
